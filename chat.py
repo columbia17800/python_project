@@ -15,7 +15,6 @@ class Chatter():
 
 	def __del__(self):
 		closeSocket()
-		
 
 	def initialTunnel(self):
 		# local reference

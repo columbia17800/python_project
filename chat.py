@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 import socket
-import PySimepleGUI as sg
 
 class Chatter():
 	#""A simple TCP/UDP chat""

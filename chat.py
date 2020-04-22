@@ -1,7 +1,8 @@
 import socket
+import PySimepleGUI as sg
 
 class Chatter():
-	""A simple TCP/UDP chat""
+	#""A simple TCP/UDP chat""
 	
 	def __init__(self, targetIP, targetPort, selfIP, selfPort):
 		self.targetIP = targetIP
@@ -43,7 +44,7 @@ class Chatter():
 		while True:						# break if 
 			s.send( self.data )
 			recv = s.recv(1024)			# receive stored at local
-			if str(recv) = "¿" : break
+			if str(recv) == "¿" : break
 			print repr(recv)
 		
 		closeSocket(self)						# close socket

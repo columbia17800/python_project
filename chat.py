@@ -45,7 +45,7 @@ class Chatter():
 			s.send( self.data )
 			recv = s.recv(1024)			# receive stored at local
 			if str(recv) == "¿" : break
-			print repr(recv)
+			print( repr(recv) )
 		
 		closeSocket(self)						# close socket
 

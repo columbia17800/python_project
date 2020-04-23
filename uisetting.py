@@ -17,6 +17,7 @@ class UISetting():
 		self.multiline_key = '-QUERY-'
 		self.do_not_clear = False
 		self.Buttons = []					#list of Buttons(tuples)
+		self.buttinMenus = []				#list of button menus
 	def setUpButton(type: str, color: Tuple, bind_return: bool) -> NoReturn:
 		# append new Button to list
 		self.Buttons.append(
@@ -30,8 +31,9 @@ class UISetting():
                 ['Help', 'About...'],]
 		self.menu = [sg.Menu(menu_def, tearoff=False)]
 
+	# a button menu is added to list
 	def setUpButtonMenu() -> NoReturn:
 		right_click_menu = ['Unused', ['Right', '!&Click', '&Menu', 'E&xit', 'Properties']]
-		self.buttonMenu.append([sg.ButtonMenu, right_click_menu, key='-BMENU-', sg.Button('Plain Button')]
+		self.buttonMenus.append([sg.ButtonMenu, right_click_menu, key='-BMENU-', sg.Button('Plain Button')]
 
 

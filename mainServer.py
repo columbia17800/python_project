@@ -3,10 +3,7 @@ import socket
 import thread
 
 class mainServer():
-
-	class manageClients(thread.Thread):
-		def __init__(self):
-
+	
 
 	def __init__(self):
 		self.selfHost = socket.gethostname()

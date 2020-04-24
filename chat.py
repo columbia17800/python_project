@@ -11,14 +11,11 @@ class Chatter():
 		Port = 80				# through http port
 		self.mainAddr = ( Host, Port )
 
-	def initP2P() -> Optional[socket.socket]:
+	# parameter takes addr which consists of host and port used for udp socket
+	def initP2P( target:Tuple[str, int] ) -> Optional[socket.socket]:
 		# server side is true and client side is false
 		selfHost = socket.gethostbyname(gethostname())
 		selfPort = 0
-		# following not implemented yet
-		targetPort = 0
-		targetHost = ''
-		taget = (targetHost, targetPort)
 		##
 		addr = ( selfHost, selfPort )
 		try:
@@ -28,6 +25,10 @@ class Chatter():
 					addr, family=socket.AF_INET6, dualstack_ipv6=True )
 			else:
 				sock = socket.create_server(addr)
+			# currently, no usage of below variables
+			(host, port) = sock.getsockname()
+			raise NotImplemented
+
 			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
 
 			# following data need to reconstruct
@@ -72,10 +73,37 @@ class Chatter():
 
 		self.main = mainSock
 
-	def connect2friend(self) -> NoReturn:
+	def pickAfriend(self, name: str) -> NoReturn:
+		main = self.main
 
+		main.sendall(bytes(name))
 
-	def 
+		# it need parse which is not completed yet
+		raise NotImplemented
+		addr = main.recv(1024)
+
+		try:
+			connect2friend( self, addr )
+		except ValueError as e:
+			raise e
+
+	def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
+		retsock = initP2P( recvAddr )
+		# might use try block later on
+		if retsock is None:
+			# wait for the function in ui to complete the yes/no part
+			# for now, it always restart the routine
+			raise NotImplemented
+			print('remote end refused, wanna try again?')
+			# user want to connect again
+			raise ValueError
+		
+		# establish tcp socket
+		(remote, addr) = retsock.accpet()
+		# since for now only a conversation is allowed
+		# , we don not need to dispatch threads to handle socket
+		# need threads to handle send and receive message
+		raise NotImplemented
 
 	def waiter(self) -> NoReturn:
 		# local reference

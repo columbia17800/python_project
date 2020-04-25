@@ -1,0 +1,38 @@
+1. in a class, immutable objects at different places are actually the same object if their values is the same
+
+2. correct way of implemeting deep copy
+
+	cls = self.__class__
+	result = cls.__new__(cls)
+	memo[id(self)] = result
+	for key, value in self.__dict__.items():
+		result.__dict__[key] = deepcopy(value, memo)
+	return result
+
+3. __var will be maglined by compiler
+
+4. _var is a private member of class which is an agreement/advise upon python
+
+5. _ is a temporary var
+
+6. immutable objects are not deep-copiable
+
+7. using struct.pack to make raw object to accomplish memcpy in C
+
+8. using typing is heavy as of python3.7
+
+9. methods to solve the problem that an annotation can not be used before class is defined:
+	
+	from __future__ import annotations
+		this will store annotations as strings
+	
+	use a string
+		example:
+		class X():
+			...
+			def x() -> 'X':
+				...
+
+	in python 4.0, this is not a issue
+
+10. TBC

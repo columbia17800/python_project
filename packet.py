@@ -31,6 +31,7 @@ class packet():
 		self.type = Type
 		self.seqnum = Seqnum % packet.SeqNumModulo
 		self.data = Data
+		self.ACK = False
 
 	def __copy__(self):
 		cls = self.__class__
@@ -57,7 +58,7 @@ class packet():
 		return packet(2, Seqnum, "", magic=cls.__ShallPass)
 
 	@classmethod
-	def createConn(cls, Seqnum: int, Data: str):
+	def createConnRequest(cls, Seqnum: int, Data: str):
 		return packet(3, Seqnum, Data, magic=cls.__ShallPass)
 
 	# start to think that private constructor is not a thing for this class
@@ -82,3 +83,8 @@ class packet():
 
 		return packet.create(retval[0], retval[1], retdata)
 
+	def ACKrecv(self):
+		self.ACK = True
+
+	def check(self):
+		assert(self.ACK), "ACK for this packet is still not received"

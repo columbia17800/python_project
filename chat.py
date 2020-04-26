@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import socket
+import packet
 from typing import NoReturn, Union,Optional
 
 class Chatter():
@@ -10,6 +11,7 @@ class Chatter():
 		Host = ''				# not known yet
 		Port = 80				# through http port
 		self.mainAddr = ( Host, Port )
+		window = {}				# window used for storing packets
 
 	# parameter takes addr which consists of host and port used for udp socket
 	def initP2P( target:Tuple[str, int] ) -> Optional[socket.socket]:
@@ -27,7 +29,9 @@ class Chatter():
 				sock = socket.create_server(addr)
 			# currently, no usage of below variables
 			(host, port) = sock.getsockname()
-			raise NotImplemented
+			packet.createConnRequest()
+			# pack the host and port and send to friend that u  wanna connect with
+			
 
 			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
 
@@ -138,3 +142,7 @@ class Chatter():
 			print( repr(recv) )
 		
 		# close socket
+
+	def notify(which: int)：
+		# functions for notify timeout for packets
+		window[which].check()

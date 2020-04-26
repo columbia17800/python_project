@@ -1,11 +1,15 @@
-from struct import *
-from ast import literal_eval
+from threading import Timer
 
-c = ("123", 90)
 
-b = str(c)
+def raiseE():
+	raise Exception
 
-c2 = literal_eval(b)
-
-print(b)
-print(c2[0])
+try:
+	t = Timer(3.0, raiseE)
+except Exception:
+	print("at creation")
+try:
+	t.start()
+except Exception:
+	print("at starting")
+print("inside function")

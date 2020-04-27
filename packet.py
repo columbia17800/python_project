@@ -13,6 +13,14 @@ def eprint(*args, **kwargs):
 class packet():
 	SeqNumModulo = 32
 	maxDatalength = 500
+	'''
+	Below is the type of packet
+	ACK:				received
+	EOT:				close or end of communication
+	PACK:				data string packet
+	CONN:				connection request contains (host, port)
+	'''
+	ACK, PACK, EOT, CONN = range(4)
 
 	__ShallPass = False
 
@@ -46,24 +54,24 @@ class packet():
 		return type(self)(*self.__dict__.values())
 
 	@classmethod
-	def createACK(cls, Seqnum: int):
+	def createACK(cls, Seqnum: int) -> packet:
 		return packet(0, Seqnum, "", magic=cls.__ShallPass)
 
 	@classmethod
-	def createPacket(cls, Seqnum: int, Data: str):
+	def createPacket(cls, Seqnum: int, Data: str) -> packet:
 		return packet(1, Seqnum, Data, magic=cls.__ShallPass)
 
 	@classmethod
-	def createEOT(cls, Seqnum: int):
+	def createEOT(cls, Seqnum: int) -> packet:
 		return packet(2, Seqnum, "", magic=cls.__ShallPass)
 
 	@classmethod
-	def createConnRequest(cls, Seqnum: int, Data: str):
+	def createConnRequest(cls, Seqnum: int, Data: str) -> packet:
 		return packet(3, Seqnum, Data, magic=cls.__ShallPass)
 
 	# start to think that private constructor is not a thing for this class
 	@classmethod
-	def create(cls, Type: int, Seqnum: int, Data: str):
+	def create(cls, Type: int, Seqnum: int, Data: str) -> packet:
 		return packet(Type, Seqnum, Data, magic=cls.__ShallPass)
 
 	def getdata(self)-> bytes:
@@ -83,8 +91,8 @@ class packet():
 
 		return packet.create(retval[0], retval[1], retdata)
 
-	def recvedACK(self):
+	def recved(self) -> NoReturn:
 		self.ACK = True
 
-	def check(self):
+	def check(self) -> NoReturn:
 		assert(self.ACK), "ACK for this packet is still not received"

@@ -5,3 +5,4 @@ import time
 
 class LogUI():
 	def __init__(self, set: UISetting):
+		raise NotImplementedError

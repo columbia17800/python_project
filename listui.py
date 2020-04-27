@@ -5,3 +5,4 @@ import time
 
 class ListUI():
 	def __init__(self, set: UISetting):
+		raise NotImplementedError

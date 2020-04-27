@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import socket
-import packet
+from packet import packet
 from typing import NoReturn, Union,Optional
+import seqnum as sq
+
 
 class Chatter():
 	#""A simple TCP/UDP chat""
@@ -12,6 +14,7 @@ class Chatter():
 		Port = 80				# through http port
 		self.mainAddr = ( Host, Port )
 		window = {}				# window used for storing packets
+		self.seqnum = sq.seqnum()
 
 	# parameter takes addr which consists of host and port used for udp socket
 	def initP2P( target:Tuple[str, int] ) -> Optional[socket.socket]:
@@ -27,9 +30,15 @@ class Chatter():
 					addr, family=socket.AF_INET6, dualstack_ipv6=True )
 			else:
 				sock = socket.create_server(addr)
-			# currently, no usage of below variables
-			(host, port) = sock.getsockname()
-			packet.createConnRequest()
+
+			addr = sock.getsockname()
+			seqnum = self.seqnum.getNum()
+			p = packet.createConnRequest(seqnum, str(addr))
+			if window.get(seqnum) is not None:
+				raise AttributeError
+			else:
+				window[seqnum] = p
+				self.seqnum.goNext()
 			# pack the host and port and send to friend that u  wanna connect with
 			
 
@@ -37,7 +46,7 @@ class Chatter():
 
 			# following data need to reconstruct
 			askforauthority.sendto(
-				b'Do you want to inital the P2P communication', target )
+				p.getdata(), target )
 
 			# try to set some options to make to multicast-friendly
 			askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -48,13 +57,24 @@ class Chatter():
 
 			# listen to incoming msg
 			askforauthority.bind( (selfHost, selfPort) )
-			(data, addr) = askforauthority.recvfrom(1024)
-			if data == b'0':
+			(data, _) = askforauthority.recvfrom(1024)
+			retp = packet.parsedata(data)
+			rettype = retp.type
+
+			# close the udp socket since it should not be used for now on
+			askforauthority.close()
+
+			if rettype == packet.EOT:
 				sock.close()
+				p.recved()
 				return None
-			else:
+			else if rettype == packet.ACK:
+				p.recved()
 				sock.listen(1)
 				return sock
+			else:
+				# I did not even think of this event
+				raise NotImplementedError
 			
 		except ValueError as e:
 			raise e
@@ -83,7 +103,7 @@ class Chatter():
 		main.sendall(bytes(name))
 
 		# it need parse which is not completed yet
-		raise NotImplemented
+		raise NotImplementedError
 		addr = main.recv(1024)
 
 		try:
@@ -97,7 +117,7 @@ class Chatter():
 		if retsock is None:
 			# wait for the function in ui to complete the yes/no part
 			# for now, it always restart the routine
-			raise NotImplemented
+			raise NotImplementedError
 			print('remote end refused, wanna try again?')
 			# user want to connect again
 			raise ValueError
@@ -107,7 +127,7 @@ class Chatter():
 		# since for now only a conversation is allowed
 		# , we don not need to dispatch threads to handle socket
 		# need threads to handle send and receive message
-		raise NotImplemented
+		raise NotImplementedError
 
 	def waiter(self) -> NoReturn:
 		# local reference

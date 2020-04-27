@@ -50,9 +50,11 @@ class Chatter():
 						p.getdata(), target )
 
 					# try to set some options to make to multicast-friendly
-					askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+					askforauthority.setsockopt(
+						socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 					try:
-						askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+						askforauthority.setsockopt(
+							socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 					except AttributeError:
 						pass
 
@@ -85,7 +87,7 @@ class Chatter():
 		except ValueError as e:
 			raise e
 		else:
-			print( 'What happened??? Another Error?!' )
+			print( 'What happened??? Another Error At initP2P?!' )
 
 	def __del__(self):
 		self.mainSock.close()
@@ -106,16 +108,44 @@ class Chatter():
 	def pickAfriend(self, name: str) -> NoReturn:
 		main = self.main
 
-		main.sendall(bytes(name))
+		seqnum = self.seqnum.getNum()
+		p = packet.createGet(seqnum, name)
+		# not gonna handle it because this shold not happen
+		# hence let it crash
+		if window.get(seqnum) is not None:
+			raise AttributeError
+		window[seqnum] = p
+		self.seqnum.goNext()
+		while True:
+			try:
+				# send packet
+				main.sendall(p.getdata())
 
-		# it need parse which is not completed yet
-		raise NotImplementedError
-		addr = main.recv(1024)
+				# parse the return packet
+				(data, _) = main.recv(1024)
+				retp = packet.parsedata(data)
+				rettype = retp.type
 
-		try:
-			connect2friend( self, addr )
-		except ValueError as e:
-			raise e
+				if rettype == packet.EOT:
+					p.recved()
+					print("your friend is offline, \
+						pick another available friend")
+					raise NotImplementedError
+					# require operations from UI
+					break
+				else if rettype == packet.ACK:
+					p.recved()
+					addr = literal_eval(retp.data)
+					break
+				else:
+					# I did not even think of this event
+					raise NotImplementedError
+
+			except Exception:
+				#re-try
+				continue
+
+		connect2friend( self, addr )
 
 	def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
 		retsock = initP2P( recvAddr )

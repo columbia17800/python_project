@@ -19,8 +19,9 @@ class packet():
 	EOT:				close or end of communication
 	PACK:				data string packet
 	CONN:				connection request contains (host, port)
+	GET:				request to get the (host, port) pair from server
 	'''
-	ACK, PACK, EOT, CONN = range(4)
+	ACK, PACK, EOT, CONN, GET = range(5)
 
 	__ShallPass = False
 
@@ -32,9 +33,9 @@ class packet():
 		Type = args[0]
 		Seqnum = args[1]
 		Data = args[2]
+		
 		self.length = len(Data)
-		if ( self.length > packet.maxDatalength ):
-			eprint( Type, ",", Seqnum, ": data too large (max 500 chars)\n" )
+		# no limit on length
 
 		self.type = Type
 		self.seqnum = Seqnum % packet.SeqNumModulo
@@ -69,10 +70,9 @@ class packet():
 	def createConnRequest(cls, Seqnum: int, Data: str) -> packet:
 		return packet(3, Seqnum, Data, magic=cls.__ShallPass)
 
-	# start to think that private constructor is not a thing for this class
 	@classmethod
-	def create(cls, Type: int, Seqnum: int, Data: str) -> packet:
-		return packet(Type, Seqnum, Data, magic=cls.__ShallPass)
+	def createGet(cls, Seqnum: int, Data: str) -> packet:
+		return packet(4, Seqnum, Data, magic=cls.__ShallPass)
 
 	def getdata(self)-> bytes:
 		fmt = '>iii{0}s'.format(self.length)
@@ -89,7 +89,7 @@ class packet():
 			fmt = '>{0}s'.format(retval[2])
 			retdata = struct.unpack(fmt, data[12:])
 
-		return packet.create(retval[0], retval[1], retdata)
+		return packet(retval[0], retval[1], retdata, magic=cls.__ShallPass)
 
 	def recved(self) -> NoReturn:
 		self.ACK = True

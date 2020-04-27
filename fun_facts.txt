@@ -33,6 +33,6 @@
 			def x() -> 'X':
 				...
 
-	in python 4.0, this is not a issue
+	in python 4.0, this is not an issue
 
-10. TBC
+10. TBD

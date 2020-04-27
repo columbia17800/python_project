@@ -42,8 +42,8 @@ class Chatter():
 			
 			while True:
 				try:
-					self.seqnum.setTimer(seqnum)
 					askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
+					askforauthority.settimeout(42.0)
 
 					# following data need to reconstruct
 					askforauthority.sendto(
@@ -76,8 +76,10 @@ class Chatter():
 					else:
 						# I did not even think of this event
 						raise NotImplementedError
-				except Exception:
+				except socket.timeout:
 					continue
+				else:
+					print("NOOOOOOOOOOOOO WAAAAAAAAAAAAAAY")
 				break;
 				
 		except ValueError as e:

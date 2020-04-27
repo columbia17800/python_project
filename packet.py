@@ -93,6 +93,3 @@ class packet():
 
 	def recved(self) -> NoReturn:
 		self.ACK = True
-
-	def check(self) -> NoReturn:
-		assert(self.ACK), "ACK for this packet is still not received"

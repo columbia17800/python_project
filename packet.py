@@ -83,7 +83,7 @@ class packet():
 
 		return packet.create(retval[0], retval[1], retdata)
 
-	def ACKrecv(self):
+	def recvedACK(self):
 		self.ACK = True
 
 	def check(self):

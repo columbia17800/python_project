@@ -36,46 +36,50 @@ class Chatter():
 			p = packet.createConnRequest(seqnum, str(addr))
 			if window.get(seqnum) is not None:
 				raise AttributeError
-			else:
-				window[seqnum] = p
-				self.seqnum.goNext()
+			window[seqnum] = p
+			self.seqnum.goNext()
 			# pack the host and port and send to friend that u  wanna connect with
 			
+			while True:
+				try:
+					self.seqnum.setTimer(seqnum)
+					askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
 
-			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
+					# following data need to reconstruct
+					askforauthority.sendto(
+						p.getdata(), target )
 
-			# following data need to reconstruct
-			askforauthority.sendto(
-				p.getdata(), target )
+					# try to set some options to make to multicast-friendly
+					askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+					try:
+						askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+					except AttributeError:
+						pass
 
-			# try to set some options to make to multicast-friendly
-			askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			try:
-				askforauthority.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-			except AttributeError:
-				pass
+					# listen to incoming msg
+					askforauthority.bind( (selfHost, selfPort) )
+					(data, _) = askforauthority.recvfrom(1024)
+					retp = packet.parsedata(data)
+					rettype = retp.type
 
-			# listen to incoming msg
-			askforauthority.bind( (selfHost, selfPort) )
-			(data, _) = askforauthority.recvfrom(1024)
-			retp = packet.parsedata(data)
-			rettype = retp.type
+					# close the udp socket since it should not be used for now on
+					askforauthority.close()
 
-			# close the udp socket since it should not be used for now on
-			askforauthority.close()
-
-			if rettype == packet.EOT:
-				sock.close()
-				p.recved()
-				return None
-			else if rettype == packet.ACK:
-				p.recved()
-				sock.listen(1)
-				return sock
-			else:
-				# I did not even think of this event
-				raise NotImplementedError
-			
+					if rettype == packet.EOT:
+						sock.close()
+						p.recved()
+						return None
+					else if rettype == packet.ACK:
+						p.recved()
+						sock.listen(1)
+						return sock
+					else:
+						# I did not even think of this event
+						raise NotImplementedError
+				except Exception:
+					continue
+				break;
+				
 		except ValueError as e:
 			raise e
 		else:

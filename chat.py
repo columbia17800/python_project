@@ -3,6 +3,7 @@ import socket
 from packet import packet
 from typing import NoReturn, Union,Optional
 import seqnum as sq
+import asyncio
 
 
 class Chatter():
@@ -15,6 +16,21 @@ class Chatter():
 		self.mainAddr = ( Host, Port )
 		self.window = {}				# window used for storing packets
 		self.seqnum = sq.seqnum()
+		self.talk_channel_open = False
+		self.msg = loop.create_future()
+		self.recv_msg = loop.create_future()
+
+	def _create_n_update_packet(self, packet_type: int, data=None) -> packet:
+		seqnum = self.seqnum.getNum()
+		p = packet(packet_type, seqnum, data,
+			0 if data is None else len(data))
+		# not gonna handle it because this shold not happen
+		# hence let it crash
+		if self.window.get(seqnum) is not None:
+			raise AttributeError
+		self.window[seqnum] = p
+		self.seqnum.goNext()
+		return p
 
 	def _send_n_recv_udp(self, sock: socket.socket, target: Tuple[str, int], data: str) -> Optional[packet]:
 		while True:
@@ -92,12 +108,7 @@ class Chatter():
 				sock = socket.create_server(addr)
 
 			addr = sock.getsockname()
-			seqnum = self.seqnum.getNum()
-			p = packet.createConnRequest(seqnum, str(addr))
-			if self.window.get(seqnum) is not None:
-				raise AttributeError
-			self.window[seqnum] = p
-			self.seqnum.goNext()
+			p = self._create_n_update_packet( packet.CONN, str(addr) )
 			# pack the host and port and send to friend that u  wanna connect with
 			
 			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
@@ -116,7 +127,7 @@ class Chatter():
 			askforauthority.bind( (selfHost, selfPort) )
 			
 			# send packet to target and get returned packet
-			retp = _send_n_recv_udp( self, askforauthority, target, p.getdata() )
+			retp = self._send_n_recv_udp( askforauthority, target, p.getdata() )
 			if retp is None:
 				# did not come up a good way to handle this
 				# leave like this right now
@@ -144,35 +155,40 @@ class Chatter():
 		self.mainSock.close()
 
 	def connectToServer(self) -> NoReturn:
+		# server addr is empty
 		mainSock = socket.create_connection( self.mainAddr, 5, ( '', 0 ) )
-
-		# say hello to server and login
-		if mainSock.sendall( data ) is not None:
-			mainSock.send( data )
-			# assume send does send all bytes successfully for now
 		raise NotImplementedError
-		data = mainSock.recv(1024)
-		#assume 1024 bytes are enough
+		
+		p = _create_n_update_packet( packet.ACK )
+
+		# assume that sendall always succeed
+		# and it is basically the _send_tcp implemented
+		while True:
+			try:
+				mainSock.sendall( p.getdata() )
+
+				retp = _recv_tcp( mainSock )
+				
+				if retp.type == packet.ACK:
+					p.recved()
+					break
+			except:
+				# regardless of all errors happened in this stage
+				continue
 
 		self.main = mainSock
 
 	def pickAfriend(self, name: str) -> NoReturn:
 		main = self.main
 
-		seqnum = self.seqnum.getNum()
-		p = packet.createGet(seqnum, name)
-		# not gonna handle it because this shold not happen
-		# hence let it crash
-		if window.get(seqnum) is not None:
-			raise AttributeError
-		window[seqnum] = p
-		self.seqnum.goNext()
+		p = _create_n_update_packet( packet.GET, name )
+		
 		while True:
 			try:
 				# send packet
 				_send_tcp( main, p.getdata() )
 
-				# parse the return packet
+				# receive packet
 				retp = _recv_tcp( main )
 				rettype = retp.type
 
@@ -197,6 +213,30 @@ class Chatter():
 
 		connect2friend( self, addr )
 
+	async def _enter_talk_channel(self, fut, sock: socket.socket) -> NoReturn:
+		self.talk_channel_open = True
+		while self.talk_channel_open:
+			await self.msg
+
+			p = self._create_n_update_packet( packet.PACK, self.msg )
+
+			_send_tcp( sock, self.msg )
+
+			retp = _recv_tcp( sock )
+			rettype = retp.type
+
+			# need to implement the check for ACK packets
+			raise NotImplementedError
+
+			if rettype == packet.ACK:
+				self.window[retp.seqnum].recved()
+			elif rettype == packet.PACK:
+				recv_msg.set_result( retp.data )
+			elif rettype == packet.EOT:
+				self.talk_channel_open = False
+			else:
+				raise NotImplementedError
+
 	def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
 		retsock = self.initP2P( recvAddr )
 		# might use try block later on
@@ -213,7 +253,10 @@ class Chatter():
 		# since for now only a conversation is allowed
 		# , we don not need to dispatch threads to handle socket
 		# need threads to handle send and receive message
-		raise NotImplementedError
+
+		# start to talk with friend
+		
+
 
 	def waiter(self) -> NoReturn:
 		# local reference

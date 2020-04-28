@@ -45,7 +45,7 @@ class packet():
 
 	@classmethod
 	def createACK(cls, Seqnum: int) -> packet:
-		return packet(0, Seqnum, "", 0)
+		return packet(0, Seqnum, None, 0)
 
 	@classmethod
 	def createPacket(cls, Seqnum: int, Data: str) -> packet:
@@ -53,7 +53,7 @@ class packet():
 
 	@classmethod
 	def createEOT(cls, Seqnum: int) -> packet:
-		return packet(2, Seqnum, "", 0)
+		return packet(2, Seqnum, None, 0)
 
 	@classmethod
 	def createConnRequest(cls, Seqnum: int, Data: str) -> packet:
@@ -67,14 +67,16 @@ class packet():
 		fmt = '>iii'
 		packed = struct.pack(fmt, self.type, self.seqnum,
 			self.length)
-		packed += self.data.encode("UTF-8")
+		if self.data is not None:
+			packed += self.data.encode("UTF-8")
 		return packed
 
 	@classmethod
 	def parsedata(cls, data: bytes) -> packet:
 		fmt = '>iii'
 		retval = struct.unpack(fmt, data[:12])
-		retdata = data[12:].decode("UTF-8")
+		if len(data) > 12:
+			retdata = data[12:].decode("UTF-8")
 
 		return packet(retval[0], retval[1], retdata, retval[2])
 

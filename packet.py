@@ -23,23 +23,12 @@ class packet():
 	'''
 	ACK, PACK, EOT, CONN, GET = range(5)
 
-	__ShallPass = False
-
-	def __init__(self, *args, magic=True):
-		# prevent from being used publically
-		assert(magic is packet.__ShallPass or packet.__ShallPass), \
-			"packet objects must be created through create or copy methods"
-
-		Type = args[0]
-		Seqnum = args[1]
-		Data = args[2]
-		
-		self.length = len(Data)
+	def __init__(self, *args):
+		self.type = args[0]
+		self.seqnum = args[1] % packet.SeqNumModulo
+		self.data = args[2]
+		self.length = args[3]
 		# no limit on length
-
-		self.type = Type
-		self.seqnum = Seqnum % packet.SeqNumModulo
-		self.data = Data
 		self.ACK = False
 
 	def __copy__(self):
@@ -56,40 +45,38 @@ class packet():
 
 	@classmethod
 	def createACK(cls, Seqnum: int) -> packet:
-		return packet(0, Seqnum, "", magic=cls.__ShallPass)
+		return packet(0, Seqnum, "", 0)
 
 	@classmethod
 	def createPacket(cls, Seqnum: int, Data: str) -> packet:
-		return packet(1, Seqnum, Data, magic=cls.__ShallPass)
+		return packet(1, Seqnum, Data, len(Data))
 
 	@classmethod
 	def createEOT(cls, Seqnum: int) -> packet:
-		return packet(2, Seqnum, "", magic=cls.__ShallPass)
+		return packet(2, Seqnum, "", 0)
 
 	@classmethod
 	def createConnRequest(cls, Seqnum: int, Data: str) -> packet:
-		return packet(3, Seqnum, Data, magic=cls.__ShallPass)
+		return packet(3, Seqnum, Data, len(Data))
 
 	@classmethod
 	def createGet(cls, Seqnum: int, Data: str) -> packet:
-		return packet(4, Seqnum, Data, magic=cls.__ShallPass)
+		return packet(4, Seqnum, Data, len(Data))
 
 	def getdata(self)-> bytes:
-		fmt = '>iii{0}s'.format(self.length)
+		fmt = '>iii'
 		packed = struct.pack(fmt, self.type, self.seqnum,
-			self.length, self.data.encode("ASCII"))
+			self.length)
+		packed += self.data.encode("UTF-8")
 		return packed
 
 	@classmethod
 	def parsedata(cls, data: bytes) -> packet:
 		fmt = '>iii'
 		retval = struct.unpack(fmt, data[:12])
-		retdata = ""
-		if (retval != 0):
-			fmt = '>{0}s'.format(retval[2])
-			retdata = struct.unpack(fmt, data[12:])
+		retdata = data[12:].decode("UTF-8")
 
-		return packet(retval[0], retval[1], retdata, magic=cls.__ShallPass)
+		return packet(retval[0], retval[1], retdata, retval[2])
 
 	def recved(self) -> NoReturn:
 		self.ACK = True

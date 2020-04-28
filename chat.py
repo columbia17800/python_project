@@ -13,11 +13,71 @@ class Chatter():
 		Host = ''				# not known yet
 		Port = 80				# through http port
 		self.mainAddr = ( Host, Port )
-		window = {}				# window used for storing packets
+		self.window = {}				# window used for storing packets
 		self.seqnum = sq.seqnum()
 
+	def _send_n_recv_udp(self, sock: socket.socket, target: Tuple[str, int], data: str) -> Optional[packet]:
+		while True:
+			try:
+				# following data need to reconstruct
+				sock.sendto(
+					data, target )
+
+				(ret, _) = sock.recvfrom(1024)
+
+				retp = packet.parsedata(ret)
+
+				# close the udp socket since it should not be used for now on
+				sock.close()
+
+			except socket.timeout:
+				continue
+			else:
+				print("NOOOOOOOOOOOOO WAAAAAAAAAAAAAAY")
+				return None
+			return retp
+
+	# send the data with socket provided
+	def _send_tcp(sock: socket.socket, data: str) -> NoReturn:
+		length = len(data)
+		totalsent = 0
+		while totalsent < length:
+			sent = sock.send( data[totalsent:] )
+			if sent == 0:
+				raise RuntimeError("socket connection broken")
+			totalsent += sent
+
+	# receive data from the tcp socket provided
+	# and return the parsed packet object
+	def _recv_tcp(sock: socket.socket) -> packet:
+		length = 0
+		totalrecd = 0
+		retp = None
+		while True:
+			if totalrecd == length:
+				break
+			ret = sock.recv(2048):
+			if ret == b'':
+				raise RuntimeError("socket connection broken")
+			# when running in first time
+			if length == 0:
+				retp = packet.parsedata(ret)
+				length = retp.length
+				recdlen = len(retp.data)
+				if length == recdlen:
+					return retp
+				totalrecd += recdlen
+				continue
+			# else
+			ret = ret.decode('UTF-8')
+			totalrecd += len(ret)
+			retp.data += ret
+
+		return retp
+
+
 	# parameter takes addr which consists of host and port used for udp socket
-	def initP2P( target:Tuple[str, int] ) -> Optional[socket.socket]:
+	def initP2P( self, target:Tuple[str, int] ) -> Optional[socket.socket]:
 		# server side is true and client side is false
 		selfHost = socket.gethostbyname(gethostname())
 		selfPort = 0
@@ -34,55 +94,46 @@ class Chatter():
 			addr = sock.getsockname()
 			seqnum = self.seqnum.getNum()
 			p = packet.createConnRequest(seqnum, str(addr))
-			if window.get(seqnum) is not None:
+			if self.window.get(seqnum) is not None:
 				raise AttributeError
-			window[seqnum] = p
+			self.window[seqnum] = p
 			self.seqnum.goNext()
 			# pack the host and port and send to friend that u  wanna connect with
 			
-			while True:
-				try:
-					askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
-					askforauthority.settimeout(42.0)
+			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
+			askforauthority.settimeout(42.0)
 
-					# following data need to reconstruct
-					askforauthority.sendto(
-						p.getdata(), target )
+			# try to set some options to make to multicast-friendly
+			askforauthority.setsockopt(
+				socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			try:
+				askforauthority.setsockopt(
+					socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+			except AttributeError:
+				pass
 
-					# try to set some options to make to multicast-friendly
-					askforauthority.setsockopt(
-						socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-					try:
-						askforauthority.setsockopt(
-							socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-					except AttributeError:
-						pass
+			# listen to incoming msg
+			askforauthority.bind( (selfHost, selfPort) )
+			
+			# send packet to target and get returned packet
+			retp = _send_n_recv_udp( self, askforauthority, target, p.getdata() )
+			if retp is None:
+				# did not come up a good way to handle this
+				# leave like this right now
+				raise ValueError
+			rettype = retp.type
 
-					# listen to incoming msg
-					askforauthority.bind( (selfHost, selfPort) )
-					(data, _) = askforauthority.recvfrom(1024)
-					retp = packet.parsedata(data)
-					rettype = retp.type
-
-					# close the udp socket since it should not be used for now on
-					askforauthority.close()
-
-					if rettype == packet.EOT:
-						sock.close()
-						p.recved()
-						return None
-					else if rettype == packet.ACK:
-						p.recved()
-						sock.listen(1)
-						return sock
-					else:
-						# I did not even think of this event
-						raise NotImplementedError
-				except socket.timeout:
-					continue
-				else:
-					print("NOOOOOOOOOOOOO WAAAAAAAAAAAAAAY")
-				break;
+			if rettype == packet.EOT:
+				sock.close()
+				p.recved()
+				return None
+			else if rettype == packet.ACK:
+				p.recved()
+				sock.listen(1)
+				return sock
+			else:
+				# I did not even think of this event
+				raise NotImplementedError
 				
 		except ValueError as e:
 			raise e
@@ -99,7 +150,7 @@ class Chatter():
 		if mainSock.sendall( data ) is not None:
 			mainSock.send( data )
 			# assume send does send all bytes successfully for now
-
+		raise NotImplementedError
 		data = mainSock.recv(1024)
 		#assume 1024 bytes are enough
 
@@ -119,11 +170,10 @@ class Chatter():
 		while True:
 			try:
 				# send packet
-				main.sendall(p.getdata())
+				_send_tcp( main, p.getdata() )
 
 				# parse the return packet
-				(data, _) = main.recv(1024)
-				retp = packet.parsedata(data)
+				retp = _recv_tcp( main )
 				rettype = retp.type
 
 				if rettype == packet.EOT:
@@ -148,7 +198,7 @@ class Chatter():
 		connect2friend( self, addr )
 
 	def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
-		retsock = initP2P( recvAddr )
+		retsock = self.initP2P( recvAddr )
 		# might use try block later on
 		if retsock is None:
 			# wait for the function in ui to complete the yes/no part

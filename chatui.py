@@ -13,6 +13,7 @@ class ChatUI():
 			sg.Button(set.Buttons[1])]]
 		
 		window = sg.Window(thatID, layout, font = (set.window_font, set.window_font_size), default_button_element_size = set.button_size)
+		start = time.localtime(time.time())
 		
 		while True:
 			event, value = window.read()
@@ -20,11 +21,22 @@ class ChatUI():
 				break
 			if event == 'SEND':
 				query = value['-QUERY-'].restrip()
-				now = time.asctime(time.localtime(time.time()))
-				print(now)
+				local = time.localtime(time.time())
+				if local[3] != start[3]:
+					now = time.asctime(local)
+					print(now)
+				elif local[4] - start[4] >= 5:
+					now = time.asctime(local)
+					print(now)
 				print('you:')
 				print(format(query))
+				start = local
 				# send message here
 			# new if for receive message
+			if event == 'receive':
+				# print message
+				
 
-		window.close
+
+	def __del__(self):
+		window.close()

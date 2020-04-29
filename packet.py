@@ -29,7 +29,6 @@ class packet():
 		self.data = args[2]
 		self.length = args[3]
 		# no limit on length
-		self.ACK = False
 
 	def __copy__(self):
 		cls = self.__class__
@@ -79,6 +78,3 @@ class packet():
 			retdata = data[12:].decode("UTF-8")
 
 		return packet(retval[0], retval[1], retdata, retval[2])
-
-	def recved(self) -> NoReturn:
-		self.ACK = True

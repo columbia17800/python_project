@@ -13,9 +13,10 @@ class seqnum():
 		self.rl = RLock()
 
 	def getNum(self) -> int:
-		return self.num
+		rl.aquire()
+		return self.num % 32
 
 	def goNext(self) -> NoReturn:
 		# it should not more than 1s for just increment a variable
-		with rl:
-			self.num += 1
+		self.num += 1
+		rl.release()

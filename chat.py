@@ -113,7 +113,7 @@ class Chatter():
 				sock = socket.create_server(addr)
 
 			addr = sock.getsockname()
-			(p, sqnum) = self._create_n_update_packet( packet.CONN, str(addr) )
+			(p, sqnum) = await self._create_n_update_packet( packet.CONN, str(addr) )
 			# pack the host and port and send to friend that u  wanna connect with
 			
 			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
@@ -162,7 +162,7 @@ class Chatter():
 		mainSock = socket.create_connection( self.mainAddr, 5, ( '', 0 ) )
 		raise NotImplementedError
 		
-		(p, sqnum) = _create_n_update_packet( packet.ACK )
+		(p, sqnum) = await self._create_n_update_packet( packet.ACK )
 
 		# assume that sendall always succeed
 		# and it is basically the _send_tcp implemented
@@ -184,7 +184,7 @@ class Chatter():
 	async def pickAfriend(self, name: str) -> NoReturn:
 		main = self.main
 
-		(p, sqnum) = _create_n_update_packet( packet.GET, name )
+		(p, sqnum) = await self._create_n_update_packet( packet.GET, name )
 		
 		while True:
 			try:
@@ -220,7 +220,7 @@ class Chatter():
 	async def _send_packet(self, sock: socket.socket) -> NoReturn:
 		while self.talk_channel_open:
 			await self.msg
-			(p, sqnum) = self._create_n_update_packet( packet.PACK, self.msg )
+			(p, sqnum) = await self._create_n_update_packet( packet.PACK, self.msg )
 			_send_tcp( sock, p.getdata() )
 			task = asyncio.create_task(self._time_out(sock, sqnum))
 
@@ -289,15 +289,16 @@ class Chatter():
 		sock.close()
 
 	async def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
-		retsock = await self.initP2P( recvAddr )
-		# might use try block later on
-		if retsock is None:
-			# wait for the function in ui to complete the yes/no part
-			# for now, it always restart the routine
-			raise NotImplementedError
-			print('remote end refused, wanna try again?')
-			# user want to connect again
-			raise ValueError
+		while True:
+			retsock = await self.initP2P( recvAddr )
+			# might use try block later on
+			if retsock is None:
+				# wait for the function in ui to complete the yes/no part
+				# for now, it always restart the routine
+				print('remote end refused, wanna try again?')
+				# user want to connect again
+				raise NotImplementedError
+			break
 		
 		# establish tcp socket
 		(remote, _) = retsock.accpet()

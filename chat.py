@@ -37,7 +37,7 @@ class Chatter():
 		self.seqnum.goNext()
 		return (p, seqnum)
 
-	async def _send_n_recv_udp(self, sock: socket.socket, target: Tuple[str, int], data: str) -> Optional[packet]:
+	def _send_n_recv_udp(self, sock: socket.socket, target: Tuple[str, int], data: str) -> Optional[packet]:
 		while True:
 			try:
 				# following data need to reconstruct
@@ -59,7 +59,7 @@ class Chatter():
 			return retp
 
 	# send the data with socket provided
-	async def _send_tcp(sock: socket.socket, data: str) -> NoReturn:
+	def _send_tcp(sock: socket.socket, data: str) -> NoReturn:
 		length = len(data)
 		totalsent = 0
 		while totalsent < length:
@@ -70,7 +70,7 @@ class Chatter():
 
 	# receive data from the tcp socket provided
 	# and return the parsed packet object
-	async def _recv_tcp(sock: socket.socket) -> packet:
+	def _recv_tcp(sock: socket.socket) -> packet:
 		length = 0
 		totalrecd = 0
 		retp = None
@@ -214,7 +214,7 @@ class Chatter():
 				#re-try
 				continue
 
-		connect2friend( self, addr )
+		await connect2friend( self, addr )
 
 	# implement selective repeat first
 	async def _send_packet(self, sock: socket.socket) -> NoReturn:
@@ -276,6 +276,7 @@ class Chatter():
 	async def _enter_talk_channel(self, sock: socket.socket) -> NoReturn:
 		self.talk_channel_open = True
 			try:
+
 				task1 = asyncio.create_task( self._send_packet( sock ) )
 				task2 = asyncio.create_task( self._recv( sock ) )
 
@@ -288,7 +289,7 @@ class Chatter():
 		sock.close()
 
 	async def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
-		retsock = self.initP2P( recvAddr )
+		retsock = await self.initP2P( recvAddr )
 		# might use try block later on
 		if retsock is None:
 			# wait for the function in ui to complete the yes/no part
@@ -305,7 +306,7 @@ class Chatter():
 		# need threads to handle send and receive message
 
 		# start to talk with friend
-		self._enter_talk_channel(remote)
+		await self._enter_talk_channel(remote)
 
 
 	def waiter(self) -> NoReturn:

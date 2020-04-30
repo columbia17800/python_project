@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from settings import UISetting
+from uisetting import UISetting
 import PySimpleGUI as sg
 import time
 

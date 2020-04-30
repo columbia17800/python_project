@@ -269,7 +269,7 @@ class Chatter():
 			else:
 				raise NotImplementedError
 
-	# for now, only one socket for discussion
+	# for now, only one socket is used for discussion
 	# don't know it will or not lead to race condition on send or recv
 	# wait until it is testified 
 	# to decide how many sockets the channel needs

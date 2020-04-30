@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import PySimepleGUI as sg
+import PySimpleGUI as sg
 from typing import List,Dict,Tuple,Any,NoReturn
 
 class UISetting():
@@ -34,6 +34,6 @@ class UISetting():
 	# a button menu is added to list
 	def setUpButtonMenu() -> NoReturn:
 		right_click_menu = ['Unused', ['Right', '!&Click', '&Menu', 'E&xit', 'Properties']]
-		self.buttonMenus.append([sg.ButtonMenu, right_click_menu, key='-BMENU-', sg.Button('Plain Button')]
+		self.buttonMenus.append([sg.ButtonMenu(right_click_menu, key='-BMENU-'), sg.Button('Plain Button')])
 
 

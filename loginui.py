@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 import time
 
 class LogUI():
-	def __init__(self, set: UISetting):
+	def __init__(self):
 		sg.theme('DarkAmber')
 		id = sg.popup_get_text('Type in a cool =ID here')
 		# if ID exist then return FAIL

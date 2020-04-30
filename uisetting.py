@@ -3,12 +3,12 @@ import PySimpleGUI as sg
 from typing import List,Dict,Tuple,Any,NoReturn
 
 class UISetting():
-	def __init__(self, thisID, thatID):
+	def __init__(self):
 		self.theme_color = 'GreenTan'
 		self.window_font = 'Helvetica'
 		self.window_font_size = ' 12'
 		self.button_size = (8,2)
-		self.text_words = 'Your chat with ' + thatID + ':'
+		self.text_words = 'Your chat with '
 		self.text_size = (40,1)
 		self.output_size = (100, 20)
 		self.output_font = ('Helvetica 10')

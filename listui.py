@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 import time
 
 class ListUI():
-	def __init__(self, set: UISetting, namelist):
+	def __init__(self, namelist):
 		layout = [[sg.Text('List of users')],
 			[sg.Input(size = (20, 1), enable_events = True, key = '-INPUT-')],
 			[sg.Listbox(namelist, size = (20, 4), key = '-LIST-')],

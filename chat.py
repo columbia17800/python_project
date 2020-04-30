@@ -343,7 +343,3 @@ class Chatter():
 			print( repr(recv) )
 		
 		# close socket
-
-	def notify(which: int)：
-		# functions for notify timeout for packets
-		window[which].check()

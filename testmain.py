@@ -10,7 +10,10 @@ def main():
 	namelist = ["1", "2"]
 	login = loginui.LogUI()
 	listen = listui.ListUI(namelist)
+	Setting.setUpButton()
+	Setting.setUpButton()
+	chat = chatui.ChatUI(Setting)
 
-	listen.event_loop()
+	chat.event_loop()
 
 main()

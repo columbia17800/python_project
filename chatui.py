@@ -12,32 +12,32 @@ class ChatUI():
 			sg.Button(set.Buttons[0]),
 			sg.Button(set.Buttons[1])]]
 		
-		self.window = sg.Window(layout, font = (set.window_font, set.window_font_size), default_button_element_size = set.button_size)
+		self.window = sg.Window(1, layout, font = (set.window_font, set.window_font_size), default_button_element_size = set.button_size)
 		self.start = time.localtime(time.time())
 		
 
-		def eventloop(self):
-			while True:
-				event, value = self.window.read()
-				if event in (None, 'EXIT'):
-					break
-				if event == 'SEND':
-					query = value['-QUERY-'].restrip()
-					local = time.localtime(time.time())
-					if local[3] != self.start[3]:
-						now = time.asctime(local)
-						print(now)
-					elif local[4] - start[4] >= 5:
-						now = time.asctime(local)
-						print(now)
-					print('you:')
-					print(format(query))
-					start = local
-					# send message here
-				# new if for receive message
-				if event == 'receive':
-					# print message
-					raise NotImplementedError
+	def event_loop(self):
+		while True:
+			event, value = self.window.read()
+			if event in (None, 'EXIT'):
+				break
+			if event == 'SEND':
+				query = value['-QUERY-'].restrip()
+				local = time.localtime(time.time())
+				if local[3] != self.start[3]:
+					now = time.asctime(local)
+					print(now)
+				elif local[4] - start[4] >= 5:
+					now = time.asctime(local)
+					print(now)
+				print('you:')
+				print(format(query))
+				start = local
+				# send message here
+			# new if for receive message
+			if event == 'receive':
+				# print message
+				raise NotImplementedError
 					
 	def __del__(self):
 		self.window.close()

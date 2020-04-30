@@ -18,10 +18,11 @@ class UISetting():
 		self.do_not_clear = False
 		self.Buttons = []					#list of Buttons(tuples)
 		self.buttinMenus = []				#list of button menus
-	def setUpButton(type: str, color: Tuple, bind_return: bool) -> NoReturn:
+
+	def setUpButton(self) -> NoReturn:
 		# append new Button to list
 		self.Buttons.append(
-			sg.Button(type, button_color=color, bind_return_key=bind_return)
+			sg.Button('Plain Button')
 			)
 
 	# a menu bar at the top of the window

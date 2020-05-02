@@ -1,12 +1,31 @@
 #!/usr/bin/env python3
+from utility import send_tcp, recv_tcp
 import socket
-import thread
+import socketserver
+import packet
+
+class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
+	def setup(self):
+		self.switcher = {
+			0 = NotImplemented,
+			1 = NotImplemented,
+			2 = NotImplemented,
+			3 = NotImplemented,
+			4 = NotImplemented,
+		}
+		
+	def handle(self):
+		retp = recv_tcp( self.request )
+
+
+class ThreadedTcpServer(socketserver.ThreadingMixin, socketserver.TCPServer):
+	pass
 
 class mainServer():
 	
 
 	def __init__(self):
-		self.selfHost = socket.gethostname()
+		self.selfHost = socket.gethostbyname(socket.gethostname())
 		self.selfPort = 80
 		self.allowedClients = 1								# the number of clients the listen port is allowed
 		addr = ( self.selfHost, self.selfPort )

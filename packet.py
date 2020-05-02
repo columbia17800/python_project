@@ -11,7 +11,6 @@ def eprint(*args, **kwargs):
 	print(*args, file=sys.stderr, **kwargs)
 
 class packet():
-	SeqNumModulo = 32
 	maxDatalength = 500
 	'''
 	Below is the type of packet
@@ -25,7 +24,7 @@ class packet():
 
 	def __init__(self, *args):
 		self.type = args[0]
-		self.seqnum = args[1] % packet.SeqNumModulo
+		self.seqnum = args[1]
 		self.data = args[2]
 		self.length = args[3]
 		# no limit on length

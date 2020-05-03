@@ -14,7 +14,7 @@ class seqnum():
 
 	def getNum(self) -> int:
 		rl.aquire()
-		return self.num % 32
+		return (self.num % 32, (bool)(self / 32) % 2)
 
 	def goNext(self) -> NoReturn:
 		# it should not more than 1s for just increment a variable

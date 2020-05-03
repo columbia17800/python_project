@@ -61,3 +61,16 @@
 		suite
 	finally:
 		l.release()
+
+12. lists are thread-safe because of GIL protecting against concurrent
+	access.
+	However, not-atomic operations of list are not safe,
+	which means lists themselves will never ever corrupt,
+	but their data might be.
+	A few of operations are safe:
+		append():
+			even though PyList_Append() is reading from memory,
+			GIL prevents from concurrent access:
+				1. data cannot be written at the same place at the same time by multiple threads
+				2. that piece of memory is protected while reading
+			Thus, we could assure that append() is thread safe 

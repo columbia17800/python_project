@@ -14,7 +14,7 @@ class packet():
 	maxDatalength = 500
 	'''
 	Below is the type of packet
-	ACK:				received
+	ACK:				received (Acknowledgement from receiver to sender)
 	EOT:				close or end of communication
 	PACK:				data string packet
 	CONN:				connection request contains (host, port)
@@ -22,11 +22,12 @@ class packet():
 	'''
 	ACK, PACK, EOT, CONN, GET = range(5)
 
-	def __init__(self, *args):
+	def __init__(self, *args, ver=None: Optional[bool]):
 		self.type = args[0]
 		self.seqnum = args[1]
 		self.data = args[2]
 		self.length = args[3]
+		self.version = 1 if ver else 0
 		# no limit on length
 
 	def __copy__(self):
@@ -42,28 +43,28 @@ class packet():
 		return type(self)(*self.__dict__.values())
 
 	@classmethod
-	def createACK(cls, Seqnum: int) -> packet:
-		return packet(0, Seqnum, None, 0)
+	def createACK(cls, Seqnum: int, Data=None: Optional[str], ver=None: Optional[bool]) -> packet:
+		return packet(0, Seqnum, Data, 0 if Data is None else len(Data), 1 if ver else 0)
 
 	@classmethod
-	def createPacket(cls, Seqnum: int, Data: str) -> packet:
-		return packet(1, Seqnum, Data, len(Data))
+	def createPacket(cls, Seqnum: int, Data: str, ver=None: Optional[bool]) -> packet:
+		return packet(1, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	@classmethod
 	def createEOT(cls, Seqnum: int) -> packet:
-		return packet(2, Seqnum, None, 0)
+		return packet(2, Seqnum, None, 0, 0)
 
 	@classmethod
-	def createConnRequest(cls, Seqnum: int, Data: str) -> packet:
-		return packet(3, Seqnum, Data, len(Data))
+	def createConnRequest(cls, Seqnum: int, Data: str, ver=None: Optional[bool]) -> packet:
+		return packet(3, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	@classmethod
-	def createGet(cls, Seqnum: int, Data: str) -> packet:
-		return packet(4, Seqnum, Data, len(Data))
+	def createGet(cls, Seqnum: int, Data: str, ver=None: Optional[bool]) -> packet:
+		return packet(4, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	def getdata(self)-> bytes:
-		fmt = '>iii'
-		packed = struct.pack(fmt, self.type, self.seqnum,
+		fmt = '>?iii'
+		packed = struct.pack(fmt, self.version, self.type, self.seqnum,
 			self.length)
 		if self.data is not None:
 			packed += self.data.encode("UTF-8")
@@ -71,9 +72,10 @@ class packet():
 
 	@classmethod
 	def parsedata(cls, data: bytes) -> packet:
-		fmt = '>iii'
-		retval = struct.unpack(fmt, data[:12])
-		if len(data) > 12:
-			retdata = data[12:].decode("UTF-8")
+		fmt = '>?iii'
+		retval = struct.unpack(fmt, data[:13])
+		retdata = None
+		if len(data) > 13:
+			retdata = data[13:].decode("UTF-8")
 
-		return packet(retval[0], retval[1], retdata, retval[2])
+		return packet(retval[1], retval[2], retdata, retval[3], retval[0])

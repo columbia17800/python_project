@@ -2,13 +2,17 @@
 import socket
 from packet import packet
 from typing import NoReturn, Union,Optional
+from utility import send_tcp, recv_tcp
+from collections import deque
 import seqnum as sq
 import asyncio
-from utility import send_tcp, recv_tcp
+
+class timeoutError(Exception):
+	pass
 
 class Chatter():
 	#""A simple TCP/UDP chat""
-	
+
 	def __init__(self):
 		# create the first socket that communicate with main server
 		Host = ''				# not known yet
@@ -18,26 +22,42 @@ class Chatter():
 		self.task_window = {}
 		self.seqnum = sq.seqnum()
 		self.talk_channel_open = False
-		self.msg = []
-		self.recv_msg = []
-		self.base = 0
-		self.notifing_packet = []
-		self.notify = async.Event()
-		self.msg_signal = async.Event()
+		self.msg = deque()
+		self.recv_msg = deque()
+		self.base = deque([set()]*32, maxlen=32)				# not received packet list
+		self.notifing_packet = deque()
+		self.msg_signal = async.Condition()
+		self.recv_signal = async.Condition()
 
 	def __del__(self):
 		self.mainSock.close()
 
-	async def _create_n_update_packet(self, packet_type: int, data=None) -> Tuple[packet, int]:
-		seqnum = self.seqnum.getNum()
-		p = packet(packet_type, seqnum, data,
-			0 if data is None else len(data))
+	async def get_msg(self) -> str:
+		ret = None
+		
+		async with self.recv_signal as rs:
+			rs.wait()
+			(ver, seq, data) = self.recv_msg.popleft()
+			self.base[seq].remove(ver)
+			ret = data
 
-		while self.window.get(seqnum) is not None:
+		return ret
+
+	async def import_msg(self, msg: str) -> NoReturn:
+		async with self.msg_signal as ms:
+			ns.notify()
+		self.msg.append(msg)
+
+	async def _create_n_update_packet(window: dict, seq: sq.seqnum, packet_type: int, data=None) -> Tuple[packet, int]:
+		(seqnum, version) = seq.getNum()
+		p = packet(packet_type, seqnum, data,
+			0 if data is None else len(data), version)
+
+		while window.get(seqnum, None) is not None:
 			await asyncio.sleep( 1 )
 
-		self.window[seqnum] = p
-		self.seqnum.goNext()
+		window[seqnum] = p
+		seq.goNext()
 		return (p, seqnum)
 
 	def _send_n_recv_udp(self, sock: socket.socket, target: Tuple[str, int], data: str) -> Optional[packet]:
@@ -62,7 +82,7 @@ class Chatter():
 			return retp
 
 	# parameter takes addr which consists of host and port used for udp socket
-	async def initP2P( self, target:Tuple[str, int] ) -> Optional[socket.socket]:
+	async def initP2P( self, target:Tuple[str, int] ) -> Optional[Tuple[socket.socket, sq.seqnum]]:
 		# server side is true and client side is false
 		selfHost = socket.gethostbyname(socket.gethostname())
 		selfPort = 0
@@ -77,7 +97,8 @@ class Chatter():
 				sock = socket.create_server(addr)
 
 			addr = sock.getsockname()
-			(p, sqnum) = await self._create_n_update_packet( packet.CONN, str(addr) )
+			data = str(addr)
+			p = createConnRequest( 0, data )
 			# pack the host and port and send to friend that u  wanna connect with
 			
 			askforauthority = socket.socket( socket.AF_INET, socket_DGRAM )
@@ -106,12 +127,11 @@ class Chatter():
 
 			if rettype == packet.EOT:
 				sock.close()
-				self.window[sqnum] = None
 				return None
 			elif rettype == packet.ACK:
-				self.window[sqnum] = None
+				seq = sq.seqnum()
 				sock.listen(1)
-				return sock
+				return (sock, seq)
 			else:
 				# I did not even think of this event
 				raise NotImplementedError
@@ -125,8 +145,10 @@ class Chatter():
 		# server addr is empty
 		mainSock = socket.create_connection( self.mainAddr, 5, ( '', 0 ) )
 		raise NotImplementedError
+
+		mainSock.settimeout(42.0)
 		
-		(p, sqnum) = await self._create_n_update_packet( packet.GET )
+		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET )
 
 		# assume that sendall always succeed
 		# and it is basically the send_tcp implemented
@@ -148,7 +170,7 @@ class Chatter():
 	async def pickAfriend(self, name: str) -> NoReturn:
 		main = self.main
 
-		(p, sqnum) = await self._create_n_update_packet( packet.GET, name )
+		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET, name )
 		
 		while True:
 			try:
@@ -181,36 +203,39 @@ class Chatter():
 		await connect2friend( self, addr )
 
 	# implement selective repeat first
-	async def _send_packet(self, sock: socket.socket) -> NoReturn:
+	async def _send_packet(self, window: dict, sock: socket.socket, seq: sq.seqnum) -> NoReturn:
 		while self.talk_channel_open:
-			await self.msg_signal.wait():
+			async with self.msg_signal as ms:
+				await ms.wait():
 
-				msg = self.msg.popleft()
+			msg = self.msg.popleft()
 
-				(p, sqnum) = await self._create_n_update_packet( packet.PACK, msg )
-				send_tcp( sock, p.getdata() )
+			(p, sqnum) = await _create_n_update_packet( window, seq, packet.PACK, msg )
+			send_tcp( sock, p.getdata() )
 
-				task = asyncio.create_task(self._time_out(sock, sqnum))
+			task = asyncio.create_task(self._time_out(window, sock, sqnum))
 
-				if self.task_window[sqnum]:
-					self.task_window[sqnum].cancel()
-				self.task_window[sqnum] = task
-				
-				if msg.count() is 0:
-					self.msg_signal.clear()
+			if self.task_window[sqnum]:
+				self.task_window[sqnum].cancel()
+			self.task_window[sqnum] = task
 
-	async def _time_out(self, sock: socket.socket, seqnum: int) -> NoReturn:
+	async def _time_out(self, window: dict, sock: socket.socket, seqnum: int) -> NoReturn:
+		p = window[seqnum]
 		try:
-			while self.talk_channel_open:
+			for _ in range(2):
 				await asyncio.sleep( 60 )
 				# ignore that packet might send due to race condition
-				p = self.window[seqnum]
+				# race condition will not happen since new packet at same seqnum
+				# will wait until old packet is sent
 				if p is None:
 					break
 				send_tcp( sock, p.getdata() )
 		except asyncio.CancelledError:
 			print('Wasted {}', seqnum)
 			pass
+		finally:
+			if p is not None:
+				raise timeoutError
 '''
 	async def _recv_ack(self, sock: socket.socket, seqnum: int):
 		while !self.window[seqnum].ACKed:
@@ -225,38 +250,41 @@ class Chatter():
 					'this task supposed not to receive \
 					packets other than ACK')
 '''
-
-	async def _send_ack(self, sock: socket.socket) -> NoReturn:
+	async def _send_ack(self, sock: socket.socket, seq: sq.seqnum) -> NoReturn:
 		while self.talk_channel_open:
 			# ack packets are not counting and storing in window
-			await self.notify.wait()
-			
+			async with self.recv_signal as rs:
+				await noti.wait()
+				
 			seq = self.notifing_packet.popleft()
 
 			p = packet.createACK( seq )
 
 			sock.sendall( p.getdata() )
 
-			if self.notifing_packet.count() is 0:
-				self.notify.clear()
-
-	async def _recv(self, sock:socket.socket) -> NoReturn:
+	async def _recv(self, window: dict, sock:socket.socket) -> NoReturn:
 		while self.talk_channel_open:
 			ret = recv_tcp(sock)
 			rettype = ret.type
 
 			if rettype == packet.ACK:
-				self.window[ret.seqnum] = None
+				window[ret.seqnum] = None
 			elif rettype == packet.PACK:
-				# received packet and send back ack packet to notify sender
-				self.recv_msg.append( ret.data )
-				
-				self.notifing_packet.append( ret.seqnum )
+				# 
+				with ret.seqnum as seq:
+					self.notifing_packet.append( seq )
+					
+					async with self.recv_signal as rs:
+						if len(base[seq]) == 0:
+							base[seq] = ret.version
+						elif ret.version is not in base[seq]:
+							base[seq].add(ret.version)
+						else:
+							# packet aleardy stored
+							continue
+						rs.notify_all()
 
-				with self.notify as notify:
-				# set notify to get _send_ack called
-					if !notify.is_set():
-						notify.set()
+					self.recv_msg.append( (ret.version, seq, ret.data) )
 
 			elif rettype == packet.EOT:
 				self.talk_channel_open = False
@@ -267,16 +295,17 @@ class Chatter():
 	# don't know it will or not lead to race condition on send or recv
 	# wait until it is testified 
 	# to decide how many sockets the channel needs
-	async def _enter_talk_channel(self, sock: socket.socket) -> NoReturn:
+	async def _enter_talk_channel(self, sock: socket.socket, seq: sq.seqnum) -> NoReturn:
 		self.talk_channel_open = True
+		window = {}
 			try:
-				task = []
+				tasks = [
+					self._send_packet( window, sock, seq ),
+					self._recv( window, sock ),
+					self._send_ack( sock ),
+				]
 
-				task.append(asyncio.create_task( self._send_packet( sock ) ))
-				task.append(asyncio.create_task( self._recv( sock ) ))
-				task.append(asyncio.create_task( self._send_ack( sock ) ))
-
-				sock.gather( *task )
+				sock.gather( *tasks )
 			except RuntimeError:
 				raise
 			
@@ -285,7 +314,7 @@ class Chatter():
 
 	async def connect2friend(self, recvAddr: Tuple[str, int]) -> NoReturn:
 		while True:
-			retsock = await self.initP2P( recvAddr )
+			(retsock, seq) = await self.initP2P( recvAddr )
 			# might use try block later on
 			if retsock is None:
 				# wait for the function in ui to complete the yes/no part
@@ -302,7 +331,7 @@ class Chatter():
 		# need threads to handle send and receive message
 
 		# start to talk with friend
-		await self._enter_talk_channel(remote)
+		await self._enter_talk_channel(remote, seq)
 
 
 	def waiter(self) -> NoReturn:

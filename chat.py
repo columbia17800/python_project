@@ -17,6 +17,8 @@ class Chatter():
 		# create the first socket that communicate with main server
 		Host = ''				# not known yet
 		Port = 80				# through http port
+		self.name = ""
+		self.keyword = ""
 		self.mainAddr = ( Host, Port )
 		self.window = {}				# window used for storing packets
 		self.task_window = {}
@@ -145,10 +147,10 @@ class Chatter():
 		# server addr is empty
 		mainSock = socket.create_connection( self.mainAddr, 5, ( '', 0 ) )
 		raise NotImplementedError
-
-		mainSock.settimeout(42.0)
 		
-		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET )
+		login = (self.name, self.keyword)
+		# get ?
+		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.CONN, str(login) )
 
 		# assume that sendall always succeed
 		# and it is basically the send_tcp implemented

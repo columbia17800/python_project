@@ -22,7 +22,7 @@ class packet():
 	'''
 	ACK, PACK, EOT, CONN, GET = range(5)
 
-	def __init__(self, *args, ver=None: Optional[bool]):
+	def __init__(self, *args, ver: Optional[bool] = None):
 		self.type = args[0]
 		self.seqnum = args[1]
 		self.data = args[2]
@@ -43,24 +43,24 @@ class packet():
 		return type(self)(*self.__dict__.values())
 
 	@classmethod
-	def createACK(cls, Seqnum: int, Data=None: Optional[str], ver=None: Optional[bool]) -> packet:
-		return packet(0, Seqnum, Data, 0 if Data is None else len(Data), 1 if ver else 0)
+	def createACK(cls, Seqnum: int, Data: Optional[str] = None, ver: Optional[bool] = None) -> packet:
+		return cls(0, Seqnum, Data, 0 if Data is None else len(Data), 1 if ver else 0)
 
 	@classmethod
-	def createPacket(cls, Seqnum: int, Data: str, ver=None: Optional[bool]) -> packet:
-		return packet(1, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createPacket(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
+		return cls(1, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	@classmethod
 	def createEOT(cls, Seqnum: int) -> packet:
-		return packet(2, Seqnum, None, 0, 0)
+		return cls(2, Seqnum, None, 0, 0)
 
 	@classmethod
-	def createConnRequest(cls, Seqnum: int, Data: str, ver=None: Optional[bool]) -> packet:
-		return packet(3, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createConnRequest(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
+		return cls(3, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	@classmethod
-	def createGet(cls, Seqnum: int, Data: str, ver=None: Optional[bool]) -> packet:
-		return packet(4, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createGet(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
+		return cls(4, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	def getdata(self)-> bytes:
 		fmt = '>?iii'
@@ -78,4 +78,4 @@ class packet():
 		if len(data) > 13:
 			retdata = data[13:].decode("UTF-8")
 
-		return packet(retval[1], retval[2], retdata, retval[3], retval[0])
+		return cls(retval[1], retval[2], retdata, retval[3], retval[0])

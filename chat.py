@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 import socket
 from packet import packet
-from typing import NoReturn, Union,Optional
+from typing import NoReturn, Union, Optional, Tuple
 from utility import send_tcp, recv_tcp
 from collections import deque
 import seqnum as sq
 import asyncio
 
 class timeoutError(Exception):
+	pass
+
+class registrationError(Exception):
+	def __init__(self, reason):
+		super().__init__(self)
+		self.reason = reason
 	pass
 
 class Chatter():
@@ -28,8 +34,8 @@ class Chatter():
 		self.recv_msg = deque()
 		self.base = deque([set()]*32, maxlen=32)				# not received packet list
 		self.notifing_packet = deque()
-		self.msg_signal = async.Condition()
-		self.recv_signal = async.Condition()
+		self.msg_signal = asyncio.Condition()
+		self.recv_signal = asyncio.Condition()
 
 	def __del__(self):
 		self.mainSock.close()
@@ -82,6 +88,33 @@ class Chatter():
 				print("NOOOOOOOOOOOOO WAAAAAAAAAAAAAAY")
 				return None
 			return retp
+
+	async def register( self, data: Union[Tuple[str, str],Tuple[str]] ) -> asyncio.Future:
+		loop = asyncio.get_running_loop()
+
+		fut = loop.create_future()
+
+		main = self.mainSock
+
+		p = _create_n_update_packet(self.window, self.seqnum, packet.REGISTER, str(data))
+
+		main.sendall( p.getdata() )
+
+		asyncio.create_task( self.recv_registration, fut )
+
+		return fut
+
+	async def recv_registration( self, result: asyncio.Future ) -> NoReturn:
+		main = self.mainSock
+
+		retp = recv_tcp( main )
+		rettype = retp.type
+		if retp == packet.EOT:
+			result.set_exception( registrationError(retp.data) )
+		elif retp == packet.ACK:
+			result.set_result( "ANYTHING!!!" )
+		else:
+			raise NotImplementedError
 
 	# parameter takes addr which consists of host and port used for udp socket
 	async def initP2P( self, target:Tuple[str, int] ) -> Optional[Tuple[socket.socket, sq.seqnum]]:
@@ -208,7 +241,7 @@ class Chatter():
 	async def _send_packet(self, window: dict, sock: socket.socket, seq: sq.seqnum) -> NoReturn:
 		while self.talk_channel_open:
 			async with self.msg_signal as ms:
-				await ms.wait():
+				await ms.wait()
 
 			msg = self.msg.popleft()
 
@@ -238,20 +271,7 @@ class Chatter():
 		finally:
 			if p is not None:
 				raise timeoutError
-'''
-	async def _recv_ack(self, sock: socket.socket, seqnum: int):
-		while !self.window[seqnum].ACKed:
-			await asyncio.sleep(2)
-			retp = recv_tcp( sock )
-			if retp.type is packet.EOT:
-				break
-			elif retp.type is packet.ACK:
-				self.window[seqnum].recved()
-			else:
-				raise RuntimeError(
-					'this task supposed not to receive \
-					packets other than ACK')
-'''
+
 	async def _send_ack(self, sock: socket.socket, seq: sq.seqnum) -> NoReturn:
 		while self.talk_channel_open:
 			# ack packets are not counting and storing in window
@@ -279,7 +299,7 @@ class Chatter():
 					async with self.recv_signal as rs:
 						if len(base[seq]) == 0:
 							base[seq] = ret.version
-						elif ret.version is not in base[seq]:
+						elif ret.version not in base[seq]:
 							base[seq].add(ret.version)
 						else:
 							# packet aleardy stored
@@ -300,16 +320,16 @@ class Chatter():
 	async def _enter_talk_channel(self, sock: socket.socket, seq: sq.seqnum) -> NoReturn:
 		self.talk_channel_open = True
 		window = {}
-			try:
-				tasks = [
-					self._send_packet( window, sock, seq ),
-					self._recv( window, sock ),
-					self._send_ack( sock ),
-				]
+		try:
+			tasks = [
+				self._send_packet( window, sock, seq ),
+				self._recv( window, sock ),
+				self._send_ack( sock ),
+			]
 
-				sock.gather( *tasks )
-			except RuntimeError:
-				raise
+			sock.gather( *tasks )
+		except RuntimeError:
+			raise
 			
 		# end of discussion
 		sock.close()

@@ -73,4 +73,23 @@
 			GIL prevents from concurrent access:
 				1. data cannot be written at the same place at the same time by multiple threads
 				2. that piece of memory is protected while reading
-			Thus, we could assure that append() is thread safe 
+			Thus, we could assure that append() is thread safe
+
+
+13. mixinclass super inheritance
+		example:
+			class Foo():
+				def __init__(self, **kwargs):
+					super().__init__(**kwargs)			# forwards all unused arguments
+			
+			class Bar():
+				def __init__(self, bar, **kwargs):		
+					super().__init__(**kwargs)			# forwards all unused arguments
+			
+			class FooBar(Foo, Bar):
+				def __init__(**kwargs):
+					super().__init__(**kwargs)			# forwards all unused arguments
+
+		mixin classes are usually abstract-like class, their objects cannot call methods
+		they are used for overriding methods in python
+

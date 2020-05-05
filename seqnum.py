@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from threading import RLock
-from packet import notify
 from typing import NoReturn
 
 class seqnum():

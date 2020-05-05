@@ -20,7 +20,7 @@ class packet():
 	CONN:				connection request contains (host, port)
 	GET:				request to get the (host, port) pair from server
 	'''
-	ACK, PACK, EOT, CONN, GET = range(5)
+	ACK, PACK, EOT, CONN, GET, REGISTER = range(6)
 
 	def __init__(self, *args, ver: Optional[bool] = None):
 		self.type = args[0]
@@ -51,8 +51,8 @@ class packet():
 		return cls(1, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	@classmethod
-	def createEOT(cls, Seqnum: int) -> packet:
-		return cls(2, Seqnum, None, 0, 0)
+	def createEOT(cls, Seqnum: int, Data: str = None, ver: Optional[bool] = None) -> packet:
+		return cls(2, Seqnum, Data, 0 if Data is None else len(Data), 1 if ver else 0)
 
 	@classmethod
 	def createConnRequest(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
@@ -61,6 +61,10 @@ class packet():
 	@classmethod
 	def createGet(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
 		return cls(4, Seqnum, Data, len(Data), 1 if ver else 0)
+
+	@classmethod
+	def createRegister(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
+		return cls(5, Seqnum, Data, len(Data), 1 if ver else 0)
 
 	def getdata(self)-> bytes:
 		fmt = '>?iii'

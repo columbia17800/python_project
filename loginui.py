@@ -11,3 +11,6 @@ class LogUI():
 		if id == '':
 			print('Null ID!')
 		# else return id to the server
+		else:
+			return id
+

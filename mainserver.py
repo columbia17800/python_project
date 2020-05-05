@@ -10,16 +10,35 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 		# assume that sending packets from server side always arrive
 		def setup(self):
 			self.msg = deque()
+			self.running = True
 
 		def finish(self):
 			pass
 
 		def ack(self):
 			raise NotImplementedError
+			name = self.retp.data
+
+			if name != "":
+				(request, _) = self.server.get_client(name, (None, None))
+				if request is not None:
+					p = createACK( self.retp.seqnum )
+					request.sendall(p.getdata())
+				else:
+					pass
+			else:
+				pass
 
 		def eot(self):
-			self.request.close()
-			self.server.clients_available.remove(name)
+			name = self.retp.data
+			if name == "":
+				self.running = False
+				self.server.remove_client( self.name )
+				self.server.close_request( self.request )
+			else:
+				(request, _) = self.server.get_client( name )
+				p = createEOT( self.retp.seqnum )
+				request.sendall(p.getdata())
 
 		def pack(self):
 			self.msg.append( self.retp.data )
@@ -30,20 +49,20 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 		def connrequest(self):
 			(name, keyword) = self.retp.data.literal_eval()
-			password = self.server.name_list.get(name, None)
+			password = self.server.get_password(name)
 			p = None
 			if password is None or password != keyword:
 				p = createEOT( self.retp.seqnum )
 			else:
 				p = createACK( self.retp.seqnum )
 				self.name = name
-				self.server.clients_available[name] = self.client_addr
+				self.server.set_client(name, (self.request, self.client_addr))
 			self.request.sendall( p.getdata() )
 
 		def get(self):
 			name = self.retp.data
 
-			addr = self.server.clients_available.get(name, None)
+			(_, addr) = self.server.get_client(name)
 
 			if addr is None:
 				p = createEOT( self.retp.seqnum )
@@ -54,12 +73,12 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 		def register(self):
 			data = self.retp.data.literal_eval()
 			name = data[0]
-			password = self.server.name_list.get(name, None)
+			password = self.server.get_password(name)
 			p = None
 			if password is not None:
 				p = createEOT( self.retp.seqnum, "selected name is registered" )
 			elif len(data) > 1:
-				self.server.name_list[name] = data[1]
+				self.server.set_password(name, data[1])
 				p = createACK( self.retp.seqnum )
 			else:
 				p = createEOT( self.retp.seqnum, "write your password in the field" )
@@ -75,9 +94,12 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 				4 : self.get,
 				5 : self.register,
 			}
-			self.retp = recv_tcp( self.request )
-
-			switcher[retp.type]()
+			while running:
+				try:
+					self.retp = recv_tcp( self.request )
+					switcher[retp.type]()
+				except:
+					raise
 
 	def __init__(self):
 		selfHost = socket.gethostbyname(socket.gethostname())
@@ -86,21 +108,25 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 		super().__init__(self, addr, ThreadedTCPRequestHandler)
 		self.clients_available = {}
 		self.name_list = {}
+		self.clients_lock = threading.lock()
+		self.password_lock = threading.lock()
 
-	def waiter(self):
-		
-		self.sock.listen( self.allowedClients )
-		while True:
-			# accept connections from outside
-			(conn, addr) = self.sock.accept()
+	def get_client( self, name: str ):
+		with self.clients_lock:
+			return self.clients_available.get(name, (None, None))
 
-			raise NotImplementedError
-"""
-			# not done yet
-			ct = manageClients(conn)
-			ct.run()
-"""
-'''
-	def endServer(self):
-		self.sock.close()
-'''
+	def set_client( self, name: str, pair ):
+		with self.clients_lock:
+			self.clients_available[name] = pair
+
+	def remove_client( self, name: str ):
+		with self.clients_lock:
+			return self.clients_available.pop(name, (None, None))
+
+	def set_password( self, name: str, password: str ):
+		with self.password_lock:
+			self.name_list[name] = password
+
+	def get_password( self, name: str ):
+		with self.password_lock:
+			return self.name_list.get(name, None)

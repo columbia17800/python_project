@@ -93,3 +93,9 @@
 		mixin classes are usually abstract-like class, their objects cannot call methods
 		they are used for overriding methods in python
 
+
+14. don't rely on python built-in GIL
+	it could be changed anytime
+	and cost of additional lock is negligible if GIL is already there
+	but with additional lock it is much safer
+

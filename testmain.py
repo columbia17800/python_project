@@ -3,9 +3,9 @@ import listui
 import loginui
 import chatui
 import uisetting
+import asyncio
 
-
-def main():
+async def main():
 	Setting = uisetting.UISetting()
 	namelist = ["1", "2"]
 	id = loginui.LogUI()
@@ -21,6 +21,6 @@ def main():
 		print("Unexistint friend!")
 	chat = chatui.ChatUI(Setting)
 
-	chat.event_loop()
+	await chat.event_loop()
 
-main()
+asyncio.run(main())

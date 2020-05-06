@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from uisetting import UISetting
 import PySimpleGUI as sg
-import 
 import time
 
 QT_ENTER_KEY1 = 'special 16777220'

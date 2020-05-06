@@ -39,18 +39,7 @@ class Chatter():
 
 	def __del__(self):
 		self.mainSock.close()
-
-	async def get_msg(self) -> str:
-		ret = None
-		
-		async with self.recv_signal as rs:
-			rs.wait()
-			(ver, seq, data) = self.recv_msg.popleft()
-			self.base[seq].remove(ver)
-			ret = data
-
-		return ret
-
+			
 	async def import_msg(self, msg: str) -> NoReturn:
 		async with self.msg_signal as ms:
 			ns.notify()

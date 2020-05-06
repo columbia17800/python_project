@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 import time
 
 class ChatUI():
-	def __init__(self, set: UISetting):
+	def __init__(self, set: UISetting， chatter: chatroom):
 		title = sg.Text(set.text_words, size = set.text_size)
 		layout = [[title], [sg.Output(size = set.output_size, font = set.output_font)],
 			[sg.Multiline(size = set.multiline_size, enter_submits=set.multiline_enter_submits, 
@@ -15,6 +15,13 @@ class ChatUI():
 		self.window = sg.Window(1, layout, font = (set.window_font, set.window_font_size), default_button_element_size = set.button_size)
 		self.start = time.localtime(time.time())
 		
+	def receiveMessage(self) -> bool:
+		# 告诉ui chatter是不是有收到新信息，如果有留言就也是true
+		return NotImplementedError
+
+	def getMessage(self) -> str;
+		# 如果receiveMessage返回true，那ui就用这个把message拿到，每次拿一句
+		return NotImplementedError
 
 	def event_loop(self):
 		while True:

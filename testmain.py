@@ -8,10 +8,17 @@ import uisetting
 def main():
 	Setting = uisetting.UISetting()
 	namelist = ["1", "2"]
-	login = loginui.LogUI()
-	listen = listui.ListUI(namelist)
+	id = loginui.LogUI()
+	listen = listui.ListUI(namelist, id) # namelist should delete id
+	that = listen.event_loop()
 	Setting.setUpButton()
 	Setting.setUpButton()
+	chatroom = chatter()
+	online = chatroom.pickAfriend(that)
+	if online:
+		chatroom.pickAfriend(that)
+	else:
+		print("Unexistint friend!")
 	chat = chatui.ChatUI(Setting)
 
 	chat.event_loop()

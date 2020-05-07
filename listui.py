@@ -12,7 +12,7 @@ class ListUI():
 		layout = [[sg.Text('List of users')],
 			[sg.Input(size = (20, 1), enable_events = True, key = '-INPUT-')],
 			[sg.Listbox(namelist, size = (20, 4), key = '-LIST-')],
-			[sg.Button('Chat!'), sg.Button('Exit')]]
+			[sg.Button('Chat!'), sg.Button('Exit'), sg.Button('Setting')]]
 	
 		self.namelist = namelist
 		self.window = sg.Window('Choose someone to chat!', layout)

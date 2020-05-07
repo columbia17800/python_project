@@ -156,3 +156,12 @@
 
 		an lvalue-to-rvalue implicit conversion or modification applied to a non-active member of a union or its subobject (even if it shares a common initial sequence with the active member)
 
+16. lvalue, xvalue, glvalue, rvalue, prvalue
+	lvalue: function or object itself, which has memory location
+	xvalue: objects are near the end of lifetime
+			result of certain expressions involving rvalue references
+	glvalue: lvalue or xvalue
+	rvalue: temporary object, a value, or subobject thereof
+	prvalue: rvalue that is not xvalue
+
+	note that rvalue reference is lvalue

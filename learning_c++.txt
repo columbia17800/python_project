@@ -1,0 +1,66 @@
+1. c++ const expression:
+		expression can be evaluated at compile time
+		such expressions can be used as non-type template atguments, array sizes, and
+		in other contexts that require constant expressions
+		example:
+			int n = 1;
+			std::array<int, n> a1; // error: n is not a constant expression
+			const int cn = 2;
+			std::array<int, cn> a2; // OK: cn is a constant expression
+
+	core const expression:
+	expressions cannot be evaluated:
+
+		this pointer, except in a constexpr or a constexpr constructor
+
+		functions that are not declared constexpr:
+			
+			constexpr int m = std::time(nullptr); // Error: std::time() is not constexpr
+
+		functions that are declared, but not defined
+			
+			int x, y, z[30];
+			constexpr auto e1 = &y - &x; // Error: undefined
+
+		constexpr template instantiation where instantiation fails to satisify constexpr requirements
+			
+			constexpr double d2 = 2.0/0.0; // Error: not defined
+
+		a function call to a constexpr virtual function, invoked on an object not usable in constant expressions (see below) and whose lifetime began outside this expression.
+
+		an expression that would exceed the implementation-defined limits
+
+		an expression whose evaluation leads to any form of core language undefined behavior (including signed integer overflow, division by zero, pointer arithmetic outside array bounds, etc). Whether standard library undefined behavior is detected is unspecified.
+			
+			constexpr double d2 = 2.0/0.0; // Error: not defined
+		
+		a lambda expression
+
+		a lvalue-to-rvalue implicit conversation unless
+			1. applied to non-volatile glvalue that designates an object that is usable in constant expresssions
+				int main() {
+				    const std::size_t tabsize = 50;
+				    int tab[tabsize]; // OK: tabsize is a constant expression
+				                      // because tabsize is usable in constant expressions
+				                      // because it has const-qualified integral type, and
+				                      // its initializer is a constant initializer
+				 
+				    std::size_t n = 50;
+				    const std::size_t sz = n;
+				    int tab2[sz]; // error: sz is not a constant expression
+				                  // because sz is not usable in constant expressions
+				                  // because its initializer was not a constant initializer
+				}
+			2. or applied to a non-volatile glvalue of literal type that refers to a non-volatile object whose lifetime began within the evaluation of this expression
+
+		an lvalue-to-rvalue implicit conversion or modification applied to a non-active member of a union or its subobject (even if it shares a common initial sequence with the active member)
+
+2. lvalue, xvalue, glvalue, rvalue, prvalue
+	lvalue: function or object itself, which has memory location
+	xvalue: objects are near the end of lifetime
+			result of certain expressions involving rvalue references
+	glvalue: lvalue or xvalue
+	rvalue: temporary object, a value, or subobject thereof
+	prvalue: rvalue that is not xvalue
+
+	note that rvalue reference is lvalue

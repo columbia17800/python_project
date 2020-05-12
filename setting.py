@@ -15,7 +15,6 @@ class ListUI():
 	
 		self.namelist = namelist
 		self.window = sg.Window('Choose someone to chat!', layout)
-		self.setting = setting
 
 	def event_loop(self) -> str:
 		while True:
@@ -29,7 +28,7 @@ class ListUI():
 				self.window['-LIST-'].update(targets)
 			else:
 				self.window['-LIST-'].update(self.namelist)
-			if event == 'Chat!':
+			if event == 'Chat!' or event == :
 				that = values['-LIST-'][0]
 				print("Start chating with", that + '!')
 				# Start chating here
@@ -38,9 +37,6 @@ class ListUI():
 				that = values['-LIST-'][0]
 				print("Start chating with", that + '!')
 				return that
-			if event == 'Setting':
-				print('Setting!')
-
 
 	def __del__(self):
 		self.window.close()

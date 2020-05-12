@@ -1,0 +1,100 @@
+1. in a class, immutable objects at different places are actually the same object if their values is the same
+
+2. correct way of implemeting deep copy
+
+	cls = self.__class__
+	result = cls.__new__(cls)
+	memo[id(self)] = result
+	for key, value in self.__dict__.items():
+		result.__dict__[key] = deepcopy(value, memo)
+	return result
+
+3. __var will be maglined by compiler
+
+4. _var is a private member of class which is an agreement/advise upon python
+
+5. _ is a temporary var
+
+6. immutable objects are not deep-copiable
+
+7. using struct.pack to make raw object to accomplish memcpy in C
+
+8. using typing is heavy as of python3.7
+
+9. methods to solve the problem that an annotation can not be used before class is defined:
+	
+	from __future__ import annotations
+		this will store annotations as strings
+	
+	use a string
+		example:
+		class X():
+			...
+			def x() -> 'X':
+				...
+
+	in python 4.0, this is not an issue
+
+10. in python3, super() is equivalent to super(<containing class>, self)
+	i.e. super() is super(A, self)
+
+11. with value as target:
+		suite
+	
+	equals to
+
+	try:
+		target = value
+		suite
+	except:
+	    hit_except = True
+	    if not exit(manager, *sys.exc_info()):
+	        raise
+	finally:
+	    if not hit_except:
+	        exit(manager, None, None, None)
+
+	for a lock object l, with statement roughly equals to
+
+	try:
+		l.acquire()
+		suite
+	finally:
+		l.release()
+
+12. lists are thread-safe because of GIL protecting against concurrent
+	access.
+	However, not-atomic operations of list are not safe,
+	which means lists themselves will never ever corrupt,
+	but their data might be.
+	A few of operations are safe:
+		append():
+			even though PyList_Append() is reading from memory,
+			GIL prevents from concurrent access:
+				1. data cannot be written at the same place at the same time by multiple threads
+				2. that piece of memory is protected while reading
+			Thus, we could assure that append() is thread safe
+
+
+13. mixinclass super inheritance
+		example:
+			class Foo():
+				def __init__(self, **kwargs):
+					super().__init__(**kwargs)			# forwards all unused arguments
+			
+			class Bar():
+				def __init__(self, bar, **kwargs):		
+					super().__init__(**kwargs)			# forwards all unused arguments
+			
+			class FooBar(Foo, Bar):
+				def __init__(**kwargs):
+					super().__init__(**kwargs)			# forwards all unused arguments
+
+		mixin classes are usually abstract-like class, their objects cannot call methods
+		they are used for overriding methods in python
+
+
+14. don't rely on python built-in GIL
+	it could be changed anytime
+	and cost of additional lock is negligible if GIL is already there
+	but with additional lock it is much safer

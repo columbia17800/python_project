@@ -102,8 +102,9 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 					raise
 
 	def __init__(self):
-		selfHost = socket.gethostbyname(socket.gethostname())
-		selfPort = 80
+		# selfHost = socket.gethostbyname(socket.gethostname())
+		selfHost = "localhost"
+		selfPort = 9999
 		addr = ( self.selfHost, self.selfPort )
 		super().__init__(self, addr, ThreadedTCPRequestHandler)
 		self.clients_available = {}

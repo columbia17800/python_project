@@ -16,13 +16,16 @@ class UISetting():
 		self.multiline_enter_submits = True
 		self.multiline_key = '-QUERY-'
 		self.do_not_clear = False
-		self.Buttons = []					#list of Buttons(tuples)
+		self.Buttons = [
+			sg.Button('SEND', button_color=(sg.YELLOWS[0], sg.BLUES[0]), bind_return_key=True),
+			sg.Button('EXIT', button_color=(sg.YELLOWS[0], sg.GREENS[0]))
+			]					#list of Buttons(tuples)
 		self.buttinMenus = []				#list of button menus
 
-	def setUpButton(self) -> NoReturn:
+	def setUpButton(self, Button) -> NoReturn:
 		# append new Button to list
 		self.Buttons.append(
-			sg.Button('Plain Button')
+				Button
 			)
 
 	# a menu bar at the top of the window

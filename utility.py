@@ -1,5 +1,7 @@
 #!usr/bin/env python3
-from typing import NoReturn
+from typing import NoReturn, Tuple
+from seqnum import seqnum
+from asyncio import sleep
 import socket
 import packet
 
@@ -40,3 +42,15 @@ def recv_tcp(sock: socket.socket) -> packet:
 		retp.data += ret
 
 	return retp
+
+async def _create_n_update_packet(window: dict, seq: seqnum, packet_type: int, data=None) -> Tuple[packet, int]:
+	(sqn, version) = seq.getNum()
+	p = packet(packet_type, sqn, data,
+		0 if data is None else len(data), version)
+
+	while window.get(sqn, None) is not None:
+		await asyncio.sleep( 1 )
+
+	window[sqn] = p
+	seq.goNext()
+	return (p, sqn)

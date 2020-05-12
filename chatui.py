@@ -32,23 +32,15 @@ class ChatUI(Thread):
 		self.recv_msg_box = deque()
 		
 	def run(self):
-		
 		self.event_loop()
 
-	async def recv_msg(self) -> NoReturn:
-		while not self.exit:
-			async with self.chatter.recv_signal as crs:
-				crs.wait()
-				(ver, seq, data) = self.chatter.recv_msg.popleft()
-				self.chatter.base[seq].remove(ver)
-				print( data )
-				self.recv_msg_box.append( data )
+	def recv_msg(self) -> Optional[str]:
+		if len(self.recv_msg_box) != 0:
+			return self.recv_msg_box.popleft()
+		return None
 
-	async def handle_send(self):
-		raise NotImplementedError
-
-	async def handle_receive(self):
-		raise NotImplementedError
+	def send_msg(self, msg: str):
+		self.chatter.import_msg(msg)
 
 	def event_loop(self):
 		try:

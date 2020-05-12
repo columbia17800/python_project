@@ -18,6 +18,7 @@ class registrationError(Exception):
 '''
 connect_to_server:				call to connect to server
 register:						register this user into server
+pick_a_friend:					pick a friend in friend list that is about to call on
 
 '''
 

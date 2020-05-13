@@ -4,7 +4,7 @@ from packet import packet
 from typing import NoReturn, Union, Optional, Tuple
 from utility import send_tcp, recv_tcp, _create_n_update_packet
 from collections import deque
-from threading import Thread
+from threading import Thread, Event
 import seqnum as sq
 import asyncio
 import socket
@@ -33,17 +33,32 @@ class Client(Thread):
 		self.keyword = ""
 		self.window = {}
 		self.seqnum = sq.seqnum()
+		self.addr = None
+		self.runningloop = Event()
 
 	def run(self):
 		self.loop = asyncio.new_event_loop()
 		asyncio.set_event_loop( self.loop() )
+		runningloop.set()
 		try:
 			self.loop.run_forever()
 		finally:
 			self.loop.run_until_complete(loop.shutdown_asyncgens())
 			self.loop.close()
 
-	async def connect_to_server(self) -> NoReturn:
+	def connect_to_server(self) -> NoReturn:
+		self.loop.call_soon_threadsafe(self._connect_to_server)
+
+	def register(self, namepair: Union[Tuple[str, str],Tuple[str]]) -> NoReturn:
+		self.loop.call_soon_threadsafe(self._register, namepair)
+
+	def pick_a_friend(self, name: str, event: Event) -> NoReturn:
+		self.loop.call_soon_threadsafe(self._pick_a_friend, name, event)
+
+	def stop(self) -> NoReturn:
+		self.loop.call_soon_threadsafe(self.loop.stop)
+
+	async def _connect_to_server(self) -> NoReturn:
 		# server addr is empty
 		mainSock = socket.create_connection( self.mainAddr, 5, ( '', 0 ) )
 		raise NotImplementedError
@@ -69,34 +84,23 @@ class Client(Thread):
 
 		self.main = mainSock
 
-	async def register( self, data: Union[Tuple[str, str],Tuple[str]] ) -> asyncio.Future:
-		loop = asyncio.get_running_loop()
-
-		fut = loop.create_future()
-
-		main = self.mainSock
+	async def _register( self, data: Union[Tuple[str, str],Tuple[str]] ) -> NoReturn:
+		main = self.main
 
 		p = _create_n_update_packet(self.window, self.seqnum, packet.REGISTER, str(data))
 
 		main.sendall( p.getdata() )
 
-		asyncio.create_task( self.recv_registration, fut )
-
-		return fut
-
-	async def recv_registration( self, result: asyncio.Future ) -> NoReturn:
-		main = self.mainSock
-
 		retp = recv_tcp( main )
 		rettype = retp.type
 		if retp == packet.EOT:
-			result.set_exception( registrationError(retp.data) )
+			raise registrationError(retp.data)
 		elif retp == packet.ACK:
-			result.set_result( "ANYTHING!!!" )
+			print( "ANYTHING!!!" )
 		else:
 			raise NotImplementedError
 
-	async def pick_a_friend(self, name: str) -> NoReturn:
+	async def _pick_a_friend(self, name: str, event: Event) -> NoReturn:
 		main = self.main
 
 		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET, name )
@@ -116,15 +120,13 @@ class Client(Thread):
 						pick another available friend")
 					raise NotImplementedError
 					# require operations from UI
-					return None
 				elif rettype == packet.ACK:
 					self.window[sqnum] = None
-					addr = literal_eval(retp.data)
-					return addr
+					self.addr = literal_eval(retp.data)
 				else:
 					# I did not even think of this event
 					raise NotImplementedError
-
+				event.set()
 			except Exception:
 				#re-try
 				continue

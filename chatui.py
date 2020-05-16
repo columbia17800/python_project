@@ -3,18 +3,20 @@ from uisetting import UISetting
 from typing import NoReturn, Union, Optional, Tuple
 from chat import Chatter
 from collections import deque
+from threading import Thread
 import PySimpleGUI as sg
 import time
 import asyncio
 import random
 import string
-import threading
+
 
 class ExitError(Exception):
 	pass
 
-class ChatUI():
+class ChatUI(Thread):
 	def __init__(self, set: UISetting, chatter: Chatter):
+		Thread.__init__(self)
 		title = sg.Text(set.text_words, size = set.text_size)
 		layout = [[title], [sg.Output(size = set.output_size, font = set.output_font)],
 			[sg.Multiline(size = set.multiline_size, enter_submits=set.multiline_enter_submits, 
@@ -29,22 +31,18 @@ class ChatUI():
 		self.msg_box = deque()
 		self.recv_msg_box = deque()
 		
-	async def recv_msg(self) -> NoReturn:
-		while not self.exit:
-			async with self.chatter.recv_signal as crs:
-				crs.wait()
-				(ver, seq, data) = self.chatter.recv_msg.popleft()
-				self.chatter.base[seq].remove(ver)
-				print( data )
-				self.recv_msg_box.append( data )
+	def run(self):
+		self.event_loop()
 
-	async def handle_send(self):
-		raise NotImplementedError
+	def recv_msg(self) -> Optional[str]:
+		if len(self.recv_msg_box) != 0:
+			return self.recv_msg_box.popleft()
+		return None
 
-	async def handle_receive(self):
-		raise NotImplementedError
+	def send_msg(self, msg: str):
+		self.chatter.import_msg(msg)
 
-	async def event_loop(self):
+	def event_loop(self):
 		try:
 			while True:
 				event, value = self.window.read()
@@ -70,14 +68,8 @@ class ChatUI():
 					raise NotImplementedError
 				else:
 					raise NotImplementedError
-
-				await asyncio.sleep(1)
 		finally:
 			# close the window
 			self.window.close()
-			# wait for all tasks
-			tasks = asyncio.all_tasks()
-			for task in tasks:
-				task.cancel()
-
-	def manage(self):
+			# wait for all tasks and cancel them
+			raise NotImplementedError

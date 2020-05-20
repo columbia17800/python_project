@@ -1,4 +1,2 @@
-testDemo.py
-test.py
-test.cc
+test*.*/testmain.py
 a.out

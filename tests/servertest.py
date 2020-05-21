@@ -89,4 +89,3 @@ class testserver(unittest.TestCase):
 
 if __name__ == '__main__':
 	unittest.main()
-	server.shutdown()

@@ -17,59 +17,61 @@ class testserver(unittest.TestCase):
 
 	def test_pack(self):
 		client = self._create_connection()
-		p = packet.packet.createPacket(0, "Hello World!")
+		p = packet.createPacket(0, "Hello World!")
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
 		client.close()
-		self.assertEqual(retp.type , packet.packet.ACK)
+		self.assertEqual(retp.type , packet.ACK)
 
 	def test_register(self):
 		client = self._create_connection()
-		p = packet.packet.createRegister(0, str(("dibs", "123321")))
+		p = packet.createRegister(0, str(("dibs", "123321")))
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
 		client.close()
-		self.assertEqual(retp.type , packet.packet.ACK)
+		self.assertEqual(retp.type , packet.ACK)
 
 	def test_register_and_get(self):
 		client = self._create_connection()
-		p = packet.packet.createRegister(0, str(("Dibs", "123321")))
+		p = packet.createRegister(0, str(("Dibs", "123321")))
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
-		self.assertEqual(retp.type , packet.packet.ACK)
+		self.assertEqual(retp.type , packet.ACK)
 
-		p = packet.packet.createConnRequest(0, str(("Dibs", "123321")))
+		p = packet.createConnRequest(0, str(("Dibs", "123321")))
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
-		self.assertEqual(retp.type , packet.packet.ACK)
+		self.assertEqual(retp.type , packet.ACK)
 
-		p = packet.packet.createGet(0, "Dibs")
+		p = packet.createGet(0, "Dibs")
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
 
 		client.close()
-		self.assertEqual(retp.type , packet.packet.ACK)
+		self.assertEqual(retp.type , packet.ACK)
 
 	def test_registed_same_usr(self):
 		client = self._create_connection()
-		p = packet.packet.createRegister(0, str(("another", "123321")))
-		ret = client.sendall(p.getdata())
-		retp = recv_tcp( client )
-		self.assertEqual(retp.type , packet.packet.ACK)
-
-		p = packet.packet.createRegister(0, str(("another", "123321")))
+		p = packet.createRegister(0, str(("another", )))
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
 		client.close()
-		self.assertEqual(retp.type , packet.packet.EOT)
+		self.assertEqual(retp.type , packet.EOT)
+		self.assertEqual(retp.data, "write your password in the field")
 
-	def test_registed_same_password(self):
+	def test_registed_attempt(self):
 		client = self._create_connection()
-		p = packet.packet.createRegister(0, str(("Newbee", "123321")))
+		p = packet.createRegister(0, str(("Newbee", "123321")))
+		ret = client.sendall(p.getdata())
+		retp = recv_tcp( client )
+		self.assertEqual(retp.type, packet.ACK)
+
+		p = packet.createRegister(0, str(("Newbee", "123321")))
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
 		client.close()
-		self.assertEqual(retp.type , packet.packet.ACK)
+		self.assertEqual(retp.type , packet.EOT)
+		self.assertEqual(retp.data, "selected name is registered")
 
 	def test_get(self):
 		pass
@@ -79,11 +81,11 @@ class testserver(unittest.TestCase):
 
 	def test_eot(self):
 		client = self._create_connection()
-		p = packet.packet.createEOT(0)
+		p = packet.createEOT(0)
 		ret = client.sendall(p.getdata())
 		retp = recv_tcp( client )
 		client.close()
-		self.assertEqual(retp.type , packet.packet.EOT)
+		self.assertEqual(retp.type , packet.EOT)
 
 if __name__ == '__main__':
 	unittest.main()

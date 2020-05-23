@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 try:
-	from uisetting import UISetting
-	import client as ct
-except:
 	from .uisetting import UISetting
 	from . import client as ct
+except:
+	from uisetting import UISetting
+	import client as ct
 import PySimpleGUI as sg
 import time
 

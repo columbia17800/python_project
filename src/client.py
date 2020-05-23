@@ -8,7 +8,7 @@ except:
 	from packet import packet
 	from utility import send_tcp, recv_tcp, _create_n_update_packet
 	import seqnum as sq
-from typing import NoReturn, Union, Optional, Tuple
+from typing import NoReturn, Union, Optional, Tuple, Coroutine
 from collections import deque
 from threading import Thread, Event
 from ast import literal_eval
@@ -55,35 +55,27 @@ class Client(Thread):
 			self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 			self.loop.close()
 
-	# login purpose
-	def connect_to_server(self, namepair: Tuple[str, str]) -> NoReturn:
-		f = self._connect_to_server(namepair)
-		# self.loop.call_soon_threadsafe(f)
+	def _run_coroutine_threadsafe(self, f: Coroutine):
 		try:
 			fut = asyncio.run_coroutine_threadsafe(f, self.loop)
 			fut.result()
 		except:
 			raise
+
+	# login purpose
+	def connect_to_server(self, namepair: Tuple[str, str]) -> NoReturn:
+		f = self._connect_to_server(namepair)
+		self._run_coroutine_threadsafe(f)
 
 	# register client itself to server
 	def register(self, namepair: Union[Tuple[str, str],Tuple[str]]) -> NoReturn:
 		f = self._register(namepair)
-		# self.loop.call_soon_threadsafe(f)
-		try:
-			fut = asyncio.run_coroutine_threadsafe(f, self.loop)
-			fut.result()
-		except:
-			raise
+		self._run_coroutine_threadsafe(f)
 
 	# pick a friend to initilize tunnel
 	def pick_a_friend(self, name: str) -> NoReturn:
 		f = self._pick_a_friend(name)
-		# self.loop.call_soon_threadsafe(f)
-		try:
-			fut = asyncio.run_coroutine_threadsafe(f, self.loop)
-			fut.result()
-		except:
-			raise
+		self._run_coroutine_threadsafe(f)
 
 	def pause(self) -> NoReturn:
 		self.loop.call_soon_threadsafe(self.loop.stop)

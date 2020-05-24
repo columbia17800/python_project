@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 try:
-	from uisetting import UISetting
-	from typing import NoReturn, Union, Optional, Tuple
-	from chat import Chatter
-except:
 	from .uisetting import UISetting
 	from .typing import NoReturn, Union, Optional, Tuple
 	from .chat import Chatter
+except:
+	from uisetting import UISetting
+	from typing import NoReturn, Union, Optional, Tuple
+	from chat import Chatter
 from collections import deque
 from threading import Thread
 import PySimpleGUI as sg

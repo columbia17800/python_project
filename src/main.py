@@ -1,15 +1,15 @@
 #!usr/bin/env python3
 
 try:
-	import listui
-	import loginui
-	import chatui
-	import uisetting
-except:
 	from . import listui
 	from . import loginui
 	from . import chatui
 	from . import uisetting
+except:
+	import listui
+	import loginui
+	import chatui
+	import uisetting
 import asyncio
 
 async def main():

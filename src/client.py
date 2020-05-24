@@ -8,11 +8,10 @@ except:
 	from packet import packet
 	from utility import send_tcp, recv_tcp, _create_n_update_packet
 	import seqnum as sq
-from typing import NoReturn, Union, Optional, Tuple
+from typing import NoReturn, Union, Optional, Tuple, Coroutine
 from collections import deque
 from threading import Thread, Event
 from ast import literal_eval
-import functools
 import asyncio
 import socket
 
@@ -23,10 +22,9 @@ class registrationError(Exception):
 	pass
 
 '''
-connect_to_server:				call to connect to server
-register:						register this user into server
-pick_a_friend:					pick a friend in friend list that is about to call on
-
+connect_to_server(namepair: Tuple[str, str]):				call to connect to server
+register(namepair: Tuple[str,] or Tuple[str, str]):			register this user into server
+pick_a_friend(friendname: str):					pick a friend in friend list that is about to call on
 '''
 
 class Client(Thread):
@@ -37,8 +35,8 @@ class Client(Thread):
 		Port = 9999				# server port
 		mainAddr = ( Host, Port )
 		self.main = socket.create_connection( mainAddr, 5, ( 'localhost', 0 ) )
-		self.name = name
-		self.keyword = password
+		self.usrname = name
+		self.usrkeyword = password
 		self.window = {}
 		self.seqnum = sq.seqnum()
 		self.addr = None
@@ -57,24 +55,27 @@ class Client(Thread):
 			self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 			self.loop.close()
 
-	# login purpose
-	def connect_to_server(self) -> NoReturn:
-		f = functools.partial(asyncio.create_task, self._connect_to_server())
-		self.loop.call_soon_threadsafe(f)
-
-	# register client itself to server
-	def register(self, namepair: Union[Tuple[str, str],Tuple[str]]) -> NoReturn:
-		f = self._register(namepair)
-		# self.loop.call_soon_threadsafe(f)
+	def _run_coroutine_threadsafe(self, f: Coroutine):
 		try:
 			fut = asyncio.run_coroutine_threadsafe(f, self.loop)
 			fut.result()
 		except:
 			raise
 
-	def pick_a_friend(self, name: str, event: Event) -> NoReturn:
-		f = functools.partial(asyncio.create_task, self._pick_a_friend(name, event))
-		self.loop.call_soon_threadsafe(f)
+	# login purpose
+	def connect_to_server(self, namepair: Tuple[str, str]) -> NoReturn:
+		f = self._connect_to_server(namepair)
+		self._run_coroutine_threadsafe(f)
+
+	# register client itself to server
+	def register(self, namepair: Union[Tuple[str, str],Tuple[str]]) -> NoReturn:
+		f = self._register(namepair)
+		self._run_coroutine_threadsafe(f)
+
+	# pick a friend to initilize tunnel
+	def pick_a_friend(self, name: str) -> NoReturn:
+		f = self._pick_a_friend(name)
+		self._run_coroutine_threadsafe(f)
 
 	def pause(self) -> NoReturn:
 		self.loop.call_soon_threadsafe(self.loop.stop)
@@ -83,12 +84,11 @@ class Client(Thread):
 		self.running = False
 		self.loop.call_soon_threadsafe(self.loop.stop)
 
-	async def _connect_to_server(self) -> NoReturn:
+	async def _connect_to_server(self, namepair: Tuple[str, str]) -> NoReturn:
 		# server addr is empty
-		print('success on main socket')
-		login = (self.name, self.keyword)
+		(self.usrname, self.usrkeyword) = namepair
 		# get ?
-		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.CONN, str(login) )
+		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.CONN, str(namepair) )
 
 		# assume that sendall always succeed
 		# and it is basically the send_tcp implemented
@@ -121,7 +121,7 @@ class Client(Thread):
 		else:
 			raise NotImplementedError
 
-	async def _pick_a_friend(self, name: str, event: Event) -> NoReturn:
+	async def _pick_a_friend(self, name: str) -> NoReturn:
 		main = self.main
 
 		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET, name )
@@ -147,7 +147,6 @@ class Client(Thread):
 				else:
 					# I did not even think of this event
 					raise NotImplementedError
-				event.set()
 			except Exception:
 				#re-try
 				continue

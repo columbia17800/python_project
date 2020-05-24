@@ -109,5 +109,5 @@
 
 16. Because of GIL, only one thread is running at a time in python
 
-17. Python compiler use comma ',' to recognize tuple in parse pharse other
+17. Python compiler uses comma ',' to recognize tuple in parse pharse other
 	than braces '(' or )'.

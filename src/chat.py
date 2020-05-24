@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 try:
-	from packet import packet
-	from utility import send_tcp, recv_tcp, _create_n_update_packet
-except:
 	from .packet import packet
 	from .utility import send_tcp, recv_tcp, _create_n_update_packet
+except:
+	from packet import packet
+	from utility import send_tcp, recv_tcp, _create_n_update_packet
 
 from typing import NoReturn, Union, Optional, Tuple
 from collections import deque

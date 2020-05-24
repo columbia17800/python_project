@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 try:
-	from uisetting import UISetting
-except:
 	from .uisetting import UISetting
+except:
+	from uisetting import UISetting
 import PySimpleGUI as sg
 import time
 

@@ -36,12 +36,20 @@ class LogUI():
 			if event is None:
 				break
 			if event == 'Log In':
-				client.connect_to_server(user)
+				try:
+					client.connect_to_server(user)
+				except error:
+					print("Error in connect!")
 			if event == 'Sign up':
-				client.register(user)
+				try:
+					client.register(user)
+				except:
+					print("Error in register!")
 			if event == 'Exit':
 				break
 
+	def get_client(self):
+		return self.client
 
 	def setup(self):
 		raise NotImplementedError 

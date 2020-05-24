@@ -22,10 +22,6 @@ class LogUI():
 			return id
 
 	def connect_server(self):
-		client = ct.Client()
-		client.start()
-		client.runningloop.wait()
-		client.connect_to_server()
 		client.register((self.id, self.keyword))
 		return client
 

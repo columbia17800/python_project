@@ -23,17 +23,25 @@ pick_a_friend(friendname: str):					pick a friend in friend list that is about t
 class LogUI():
 	def __init__(self):
 		sg.theme('DarkAmber')
-		id = sg.popup_get_text('Type in a cool =ID here')
-		# if ID exist then return FAIL
-		self.id = id
-		self.keyword = None
-		if id == '':
-			print('Null ID!')
-		# else return id to the server
-		else:
-			return id
+		self.setup()
+		layout = [sg.Text("Your id: "), sg.Input(size = (12, 1), key = "ID"),
+					sg.Text("Your password: "), sg.Input(size = (12, 1), key = "PASSWORD"),
+					sg.Button("Log In"), sg.Button("Sign Up"), sg.Button("Exit")]
+		window = sg.Window("Log in to chat!", layout)
+		
+	def event_loop(self):
+		while True:
+			event, values = window.read()
+			user = (values['-ID-'], values['-PASSWORD-'])
+			if event is None:
+				break
+			if event == 'Log In':
+				client.connect_to_server(user)
+			if event == 'Sign up':
+				client.register(user)
+			if event == 'Exit':
+				break
 
-	def connect_server(self):
-		client.register((self.id, self.keyword))
-		return client
 
+	def setup(self):
+		raise NotImplementedError 

@@ -24,9 +24,9 @@ class LogUI():
 	def __init__(self):
 		sg.theme('DarkAmber')
 		self.setup()
-		layout = [sg.Text("Your id: "), sg.Input(size = (12, 1), key = "ID"),
-					sg.Text("Your password: "), sg.Input(size = (12, 1), key = "PASSWORD"),
-					sg.Button("Log In"), sg.Button("Sign Up"), sg.Button("Exit")]
+		layout = [[sg.Text("Your id: "), sg.Input(size = (12, 1), key = '-ID-')],
+					[sg.Text("Your password: "), sg.Input(size = (12, 1), key = '-PASSWORD-')],
+					[sg.Button("Log In"), sg.Button("Sign Up"), sg.Button("Exit")]]
 		window = sg.Window("Log in to chat!", layout)
 		
 	def event_loop(self):

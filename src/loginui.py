@@ -27,11 +27,11 @@ class LogUI():
 		layout = [[sg.Text("Your id: "), sg.Input(size = (12, 1), key = '-ID-')],
 					[sg.Text("Your password: "), sg.Input(size = (12, 1), key = '-PASSWORD-')],
 					[sg.Button("Log In"), sg.Button("Sign Up"), sg.Button("Exit")]]
-		window = sg.Window("Log in to chat!", layout)
+		self.window = sg.Window("Log in to chat!", layout)
 		
 	def event_loop(self):
 		while True:
-			event, values = window.read()
+			event, values = self.window.read()
 			user = (values['-ID-'], values['-PASSWORD-'])
 			if event is None:
 				break

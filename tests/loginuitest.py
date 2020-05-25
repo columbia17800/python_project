@@ -12,7 +12,7 @@ class logintest(unittest.TestCase):
 		self.login = LogUI()
 
 	def test_eventloop(self):
-		self.login.eventloop()
+		self.login.event_loop()
 
 if __name__ == '__main__':
 	unittest.main()

@@ -116,7 +116,7 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 	def __init__(self):
 		# selfHost = socket.gethostbyname(socket.gethostname())
 		self.__class__.allow_reuse_address = True
-		super().__init__(("localhost", 9999), ThreadedTCPRequestHandler)
+		super().__init__((socket.gethostname(), 9999), ThreadedTCPRequestHandler)
 		self.clients_available = {}
 		self.name_list = {}
 		self.clients_lock = threading.Lock()

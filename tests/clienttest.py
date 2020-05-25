@@ -25,6 +25,13 @@ class testclient(unittest.TestCase):
 		except registrationError as re:
 			print(re.reason)
 
+	def test_conn(self):
+		try:
+			self.client.register(('sumbitch', 'sumpassword'))
+
+			self.client.connect_to_server(('sumbitch', 'sumpassword'))
+		except:
+			raise
+
 if __name__ == '__main__':
 	unittest.main()
-	testclient.client.stop()

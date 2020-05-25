@@ -31,7 +31,7 @@ class Client(Thread):
 	def __init__(self, name='admin', password='admin'):
 		Thread.__init__(self)
 		# create the first socket that communicate with main server
-		Host = 'localhost'		# not known yet
+		Host = socket.gethostname()		# not known yet
 		Port = 9999				# server port
 		mainAddr = ( Host, Port )
 		self.main = socket.create_connection( mainAddr, 5, ( 'localhost', 0 ) )

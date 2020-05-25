@@ -35,6 +35,13 @@ class Chatter(Thread):
 	def __del__(self):
 		raise NotImplementedError
 
+	def _run_coroutine_threadsafe(self, f: Coroutine):
+		try:
+			fut = asyncio.run_coroutine_threadsafe(f, self.loop)
+			fut.result()
+		except:
+			raise
+
 	def run(self):
 		self.loop = asyncio.new_event_loop()
 		asyncio.set_event_loop( self.loop() )
@@ -48,16 +55,17 @@ class Chatter(Thread):
 	def import_msg(self, msg: str) -> NoReturn:
 		self.loop.call_soon_threadsafe(self._import_msg, msg)
 
-	def connect2friend(self, recvAddr: Tuple[str, int], recv_box: deque) -> NoReturn:
-		self.loop.call_soon_threadsafe(self._connect2friend, recvAddr, recv_box)
+	def connect2friend(self, recvAddr: Tuple[str, int], recvbox: deque) -> NoReturn:
+		f = self._connect2friend( recvAddr, recvbox )
+		self._run_coroutine_threadsafe( f )
 
 	def stop(self) -> NoReturn:
 		self.loop.call_soon_threadsafe(self.loop.stop)
 
 	async def _import_msg(self, msg: str) -> NoReturn:
+		self.msg.append(msg)
 		async with self.msg_signal as ms:
 			ns.notify()
-		self.msg.append(msg)
 
 	def _send_n_recv_udp(self, sock: socket.socket, target: Tuple[str, int], data: str) -> Optional[packet]:
 		while True:
@@ -83,20 +91,20 @@ class Chatter(Thread):
 	# parameter takes addr which consists of host and port used for udp socket
 	async def initP2P( self, target:Tuple[str, int] ) -> Optional[Tuple[socket.socket, sq.seqnum]]:
 		# server side is true and client side is false
-		selfHost = socket.gethostbyname(socket.gethostname())
+		selfHost = socket.gethostname()
 		selfPort = 0
 		##
 		addr = ( selfHost, selfPort )
 		try:
-			# server need binding explicitly
+			''' server need binding explicitly
 			if socket.has_dualstack_ipv6():
 				sock = socket.create_server(
 					addr, family=socket.AF_INET6, dualstack_ipv6=True )
 			else:
-				sock = socket.create_server(addr)
+			'''
+			sock = socket.create_server(addr)
 
-			addr = sock.getsockname()
-			data = str(addr)
+			data = str( sock.getsockname() )
 			p = createConnRequest( 0, data )
 			# pack the host and port and send to friend that u  wanna connect with
 			
@@ -113,7 +121,7 @@ class Chatter(Thread):
 				pass
 
 			# listen to incoming msg
-			askforauthority.bind( (selfHost, selfPort) )
+			askforauthority.bind( ('', 0) )
 			
 			# send packet to target and get returned packet
 			retp = self._send_n_recv_udp( askforauthority, target, p.getdata() )

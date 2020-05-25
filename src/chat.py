@@ -2,13 +2,14 @@
 try:
 	from .packet import packet
 	from .utility import send_tcp, recv_tcp, _create_n_update_packet
+	from . import seqnum as sq
 except:
 	from packet import packet
 	from utility import send_tcp, recv_tcp, _create_n_update_packet
+	import seqnum as sq
 from threading import Thread
 from typing import NoReturn, Union, Optional, Tuple, Coroutine
 from collections import deque
-import seqnum as sq
 import asyncio
 import socket
 

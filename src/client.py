@@ -4,10 +4,12 @@ try:
 	from .packet import packet
 	from .utility import send_tcp, recv_tcp, _create_n_update_packet
 	from . import seqnum as sq
+	from .chat import Chatter
 except:
 	from packet import packet
 	from utility import send_tcp, recv_tcp, _create_n_update_packet
 	import seqnum as sq
+	from chat import Chatter
 from typing import NoReturn, Union, Optional, Tuple, Coroutine
 from collections import deque
 from threading import Thread, Event
@@ -19,6 +21,9 @@ class registrationError(Exception):
 	def __init__(self, reason):
 		super().__init__(self)
 		self.reason = reason
+	pass
+
+class loginError(Exception):
 	pass
 
 '''
@@ -42,6 +47,7 @@ class Client(Thread):
 		self.addr = None
 		self.runningloop = Event()
 		self.running = True
+		self.availchat = deque()
 
 	def run(self):
 		self.loop = asyncio.new_event_loop()
@@ -100,7 +106,11 @@ class Client(Thread):
 				
 				if retp.type == packet.ACK:
 					self.window[sqnum] = None
+					print('server connected')
 					break
+				elif retp.type == packet.EOT:
+					self.window[sqnum] = None
+					raise loginError
 			except:
 				# regardless of all errors happened in this stage
 				continue
@@ -124,7 +134,24 @@ class Client(Thread):
 	async def _pick_a_friend(self, name: str) -> NoReturn:
 		main = self.main
 
-		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET, name )
+		p2p = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+		p2p.setsockopt(
+			socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		try:
+			p2p.setsockopt(
+				socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+			p2p.bind( socket.gethostname(), 0 )
+			p2p.listen(1)
+		except AttributeError:
+			pass
+		else:
+			print('_pick_a_friend binding errors')
+			raise
+
+		addr = p2p.getsockname()
+		senddata = '{},{},{}'.format( name, addr[0], addr[1] )
+
+		(p, sqnum) = await _create_n_update_packet( self.window, self.seqnum, packet.GET, senddata )
 		
 		while True:
 			try:
@@ -143,7 +170,13 @@ class Client(Thread):
 					# require operations from UI
 				elif rettype == packet.ACK:
 					self.window[sqnum] = None
-					self.addr = literal_eval(retp.data)
+					conn, _ = p2p.accept()
+					if len(self.availchat) == 0:
+						chat = Chatter()
+					else:
+						chat = self.availchat.popleft()
+
+					chat.start()
 				else:
 					# I did not even think of this event
 					raise NotImplementedError

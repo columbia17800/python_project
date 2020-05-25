@@ -17,8 +17,8 @@ class packet():
 	ACK:				received (Acknowledgement from receiver to sender)
 	EOT:				close or end of communication
 	PACK:				data string packet
-	CONN:				connection request contains (host, port)
-	GET:				request to get the (host, port) pair from server
+	CONN:				login connection request contains (host, port)
+	GET:				request to initialize P2P
 	'''
 	ACK, PACK, EOT, CONN, GET, REGISTER = range(6)
 

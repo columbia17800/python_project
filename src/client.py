@@ -98,22 +98,16 @@ class Client(Thread):
 
 		# assume that sendall always succeed
 		# and it is basically the send_tcp implemented
-		while True:
-			try:
-				self.main.sendall( p.getdata() )
+		self.main.sendall( p.getdata() )
 
-				retp = recv_tcp( self.main )
-				
-				if retp.type == packet.ACK:
-					self.window[sqnum] = None
-					print('server connected')
-					break
-				elif retp.type == packet.EOT:
-					self.window[sqnum] = None
-					raise loginError
-			except:
-				# regardless of all errors happened in this stage
-				continue
+		retp = recv_tcp( self.main )
+		
+		if retp.type == packet.ACK:
+			self.window[sqnum] = None
+			print('server connected')
+		elif retp.type == packet.EOT:
+			self.window[sqnum] = None
+			raise loginError
 
 	async def _register( self, data: Union[Tuple[str, str],Tuple[str]] ) -> NoReturn:
 		main = self.main

@@ -11,6 +11,10 @@ class logintest(unittest.TestCase):
 	def setUpClass(self):
 		self.login = LogUI()
 
+	@classmethod
+	def tearDownClass(self):
+		self.login.close()
+
 	def test_eventloop(self):
 		self.login.event_loop()
 

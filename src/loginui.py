@@ -33,20 +33,22 @@ class LogUI():
 		while True:
 			event, values = self.window.read()
 			user = (values['-ID-'], values['-PASSWORD-'])
-			if event is None:
+			if event is None or event == 'Exit':
 				break
-			if event == 'Log In':
+			elif event == 'Log In':
 				try:
 					self.client.connect_to_server(user)
-				except error:
+				except ct.loginError:
 					print("Error in connect!")
-			if event == 'Sign up':
+				self.window.close()
+				break
+			elif event == 'Sign Up':
 				try:
 					self.client.register(user)
-				except:
+				except ct.registrationError:
 					print("Error in register!")
-			if event == 'Exit':
-				break
+			else:
+				raise Exception
 
 	def get_client(self):
 		return self.client
@@ -55,3 +57,6 @@ class LogUI():
 		self.client = ct.Client()
 		self.client.start()
 		self.client.runningloop.wait()
+
+	def close(self):
+		self.client.stop()

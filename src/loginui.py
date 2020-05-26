@@ -38,17 +38,21 @@ class LogUI():
 			elif event == 'Log In':
 				try:
 					self.client.connect_to_server(user)
+					sg.popup(f"You have logged in!")
 				except ct.loginError:
-					print("Error in connect!")
+					sg.popup(f"Error in connect!")
 				self.window.close()
 				break
 			elif event == 'Sign Up':
 				try:
 					self.client.register(user)
-				except ct.registrationError:
-					print("Error in register!")
+					sg.popup(f"You have registered successfully!")
+				except ct.registrationError e:
+					sg.popup(f"Error in register!")
+					print(e.reason)
+
 			else:
-				raise Exception
+				raise NotImplementedError
 
 	def get_client(self):
 		return self.client

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-try:
-	from .uisetting import uisetting
-except:
-	from uisetting import UISetting
+from uisetting import UISetting
 import PySimpleGUI as sg
 import time
 
@@ -10,16 +7,14 @@ QT_ENTER_KEY1 = 'special 16777220'
 QT_ENTER_KEy2 = 'special 16777221'
 
 class SettingUI():
-	def __init__(self, setting: UISetting, namelist, id):
-		layout = [[sg.Text("Background color"), sg.]
-			]
-		window = sg.Window("Time Tracker", layout,
-			default_element_size=(12, 1),
-          	text_justification='r',
-          	auto_size_text=False,
-          	auto_size_buttons=False,
-          	default_button_element_size=(12, 1),
-          	finalize=True)
+	def __init__(self, setting: UISetting):
+		layout = [[sg.Text('Setting and options')],
+			[sg.Input(size = (20, 1), enable_events = True, key = '-INPUT-')],
+			[sg.Listbox(namelist, size = (20, 4), key = '-LIST-')],
+			[sg.Button('Chat!'), sg.Button('Exit'), sg.Button('Setting')]]
+	
+		self.namelist = namelist
+		self.window = sg.Window('Choose someone to chat!', layout)
 
 	def event_loop(self) -> str:
 		while True:

@@ -37,15 +37,19 @@ class LogUI():
 			elif event == 'Log In':
 				try:
 					self.client.connect_to_server(user)
+					sg.popup(f"You have logged in!")
 				except ct.loginError:
-					print("password or name is not correct")
+					sg.popup(f"password or name is not correct")
 				self.window.close()
 				break
 			elif event == 'Sign Up':
 				try:
 					self.client.register(user)
-				except ct.registrationError as ctr:
-					print(ctr.reason)
+					sg.popup(f"You have registered successfully!")
+				except ct.registrationError e:
+					sg.popup(f"Error in register!")
+					print(e.reason)
+
 			else:
 				raise NotImplementedError
 

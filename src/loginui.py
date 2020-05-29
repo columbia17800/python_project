@@ -10,7 +10,6 @@ import time
 
 '''
 methods in client:
-
 请求链接服务器（登录：namepair里面是用户名和密码，用户名在前
 connect_to_server(namepair: Tuple[str, str]):				call to connect to server
 注册：namepair要不是单独用户名，就是用户名和密码
@@ -39,16 +38,16 @@ class LogUI():
 				try:
 					self.client.connect_to_server(user)
 				except ct.loginError:
-					print("Error in connect!")
+					print("password or name is not correct")
 				self.window.close()
 				break
 			elif event == 'Sign Up':
 				try:
 					self.client.register(user)
-				except ct.registrationError:
-					print("Error in register!")
+				except ct.registrationError as ctr:
+					print(ctr.reason)
 			else:
-				raise Exception
+				raise NotImplementedError
 
 	def get_client(self):
 		return self.client

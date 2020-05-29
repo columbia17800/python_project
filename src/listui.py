@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 try:
 	from .uisetting import UISetting
+	from .chatui import ChatUI
 except:
 	from uisetting import UISetting
+	from chatui import ChatUI
 import PySimpleGUI as sg
 import time
 
@@ -44,6 +46,10 @@ class ListUI():
 			if event == 'Setting':
 				print('Setting!')
 
+	def pop_chat(self, friend: str):
+		chat = self.client.pick_a_friend(friend)
+		chatui = ChatUI(self.setting, chat)
+		chatui.start()
 
 	def __del__(self):
 		self.window.close()

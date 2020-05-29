@@ -37,11 +37,12 @@ class ChatUI(Thread):
 		self.recv_msg_box = deque()
 		
 	def run(self):
+		self.chatter.connect2friend()
 		self.event_loop()
 
 	def recv_msg(self) -> Optional[str]:
-		if len(self.recv_msg_box) != 0:
-			return self.recv_msg_box.popleft()
+		if len(self.chatter.recv_msg) != 0:
+			return self.recv_msg.popleft()
 		return None
 
 	def send_msg(self, msg: str):

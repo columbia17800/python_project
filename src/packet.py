@@ -22,12 +22,10 @@ class packet():
 	'''
 	ACK, PACK, EOT, CONN, GET, REGISTER = range(6)
 
-	def __init__(self, *args, ver: Optional[bool] = None):
+	def __init__(self, *args):
 		self.type = args[0]
-		self.seqnum = args[1]
 		self.data = args[2]
-		self.length = args[3]
-		self.version = 1 if ver else 0
+		self.length = args[1]
 		# no limit on length
 
 	def __copy__(self):
@@ -47,32 +45,32 @@ class packet():
 			self.seqnum, self.data, self.length, self.version)
 
 	@classmethod
-	def createACK(cls, Seqnum: int, Data: Optional[str] = None, ver: Optional[bool] = None) -> packet:
-		return cls(0, Seqnum, Data, 0 if Data is None else len(Data), 1 if ver else 0)
+	def createACK(cls, Data: Optional[str] = None) -> packet:
+		return cls(0, Data, 0 if Data is None else len(Data), 1 if ver else 0)
 
 	@classmethod
-	def createPacket(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
-		return cls(1, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createPacket(cls, Data: str) -> packet:
+		return cls(1, Data, len(Data))
 
 	@classmethod
-	def createEOT(cls, Seqnum: int, Data: str = None, ver: Optional[bool] = None) -> packet:
-		return cls(2, Seqnum, Data, 0 if Data is None else len(Data), 1 if ver else 0)
+	def createEOT(cls, Data: str = None) -> packet:
+		return cls(2, Data, 0 if Data is None else len(Data))
 
 	@classmethod
-	def createConnRequest(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
-		return cls(3, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createConnRequest(cls, Data: str) -> packet:
+		return cls(3, Data, len(Data))
 
 	@classmethod
-	def createGet(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
-		return cls(4, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createGet(cls, Data: str) -> packet:
+		return cls(4, Data, len(Data))
 
 	@classmethod
-	def createRegister(cls, Seqnum: int, Data: str, ver: Optional[bool] = None) -> packet:
-		return cls(5, Seqnum, Data, len(Data), 1 if ver else 0)
+	def createRegister(cls, Data: str) -> packet:
+		return cls(5, Data, len(Data))
 
 	def getdata(self)-> bytes:
-		fmt = '>?iii'
-		packed = struct.pack(fmt, self.version, self.type, self.seqnum,
+		fmt = '>ii'
+		packed = struct.pack(fmt, self.type,
 			self.length)
 		if self.data is not None:
 			packed += self.data.encode("UTF-8")
@@ -80,10 +78,10 @@ class packet():
 
 	@classmethod
 	def parsedata(cls, data: bytes) -> packet:
-		fmt = '>?iii'
-		retval = struct.unpack(fmt, data[:13])
+		fmt = '>ii'
+		retval = struct.unpack(fmt, data[:8])
 		retdata = None
-		if len(data) > 13:
-			retdata = data[13:].decode("UTF-8")
+		if len(data) > 8:
+			retdata = data[8:].decode("UTF-8")
 
-		return cls(retval[1], retval[2], retdata, retval[3], retval[0])
+		return cls(retval[0], retval[1], retdata)

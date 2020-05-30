@@ -26,6 +26,7 @@ class packet():
 		self.type = args[0]
 		self.data = args[1]
 		self.length = args[2]
+		self.spec = 0 if args[3] is None else args[3]
 		# no limit on length
 
 	def __copy__(self):
@@ -45,43 +46,43 @@ class packet():
 			self.data, self.length)
 
 	@classmethod
-	def createACK(cls, Data: Optional[str] = None) -> packet:
-		return cls(0, Data, 0 if Data is None else len(Data))
+	def createACK(cls, Data: Optional[str] = None, Spec: Optional[int] = None) -> packet:
+		return cls(0, Data, 0 if Data is None else len(Data), Spec)
 
 	@classmethod
-	def createPacket(cls, Data: str) -> packet:
-		return cls(1, Data, len(Data))
+	def createPacket(cls, Data: str, Spec: Optional[int] = None) -> packet:
+		return cls(1, Data, len(Data), Spec)
 
 	@classmethod
-	def createEOT(cls, Data: str = None) -> packet:
-		return cls(2, Data, 0 if Data is None else len(Data))
+	def createEOT(cls, Data: Optional[str] = None, Spec: Optional[int] = None) -> packet:
+		return cls(2, Data, 0 if Data is None else len(Data), Spec)
 
 	@classmethod
-	def createConnRequest(cls, Data: str) -> packet:
-		return cls(3, Data, len(Data))
+	def createConnRequest(cls, Data: str, Spec: Optional[int] = None) -> packet:
+		return cls(3, Data, len(Data), Spec)
 
 	@classmethod
-	def createGet(cls, Data: str) -> packet:
-		return cls(4, Data, len(Data))
+	def createGet(cls, Data: str, Spec: Optional[int] = None) -> packet:
+		return cls(4, Data, len(Data), Spec)
 
 	@classmethod
-	def createRegister(cls, Data: str) -> packet:
-		return cls(5, Data, len(Data))
+	def createRegister(cls, Data: str, Spec: Optional[int] = None) -> packet:
+		return cls(5, Data, len(Data), Spec)
 
 	def getdata(self)-> bytes:
-		fmt = '>ii'
+		fmt = '>iii'
 		packed = struct.pack(fmt, self.type,
-			self.length)
+			self.length, self.spec)
 		if self.data is not None:
 			packed += self.data.encode("UTF-8")
 		return packed
 
 	@classmethod
 	def parsedata(cls, data: bytes) -> packet:
-		fmt = '>ii'
-		retval = struct.unpack(fmt, data[:8])
+		fmt = '>iii'
+		retval = struct.unpack(fmt, data[:12])
 		retdata = None
-		if len(data) > 8:
-			retdata = data[8:].decode("UTF-8")
+		if len(data) > 12:
+			retdata = data[12:].decode("UTF-8")
 
-		return cls(retval[0], retdata, retval[1])
+		return cls(retval[0], retdata, retval[1], retval[2])

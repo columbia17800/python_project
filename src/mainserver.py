@@ -70,11 +70,11 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		self.request.sendall( p.getdata() )
 
 	def get(self):
-		name = self.retp.data
+		(name, host, port) = self.retp.data
 
-		(_, addr) = self.server.get_client(name)
+		(conn, _) = self.server.get_client(name)
 
-		if addr is None:
+		if conn is None:
 			p = packet.createEOT( )
 		else:
 			p = packet.createACK( str(addr) )
@@ -130,14 +130,27 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 		with self.clients_lock:
 			self.clients_available[name] = pair
 
+	def get_all_client(self):
+		with self.clients_lock:
+			return self.clients_available.keys()
+
 	def remove_client( self, name: str ):
 		with self.clients_lock:
 			return self.clients_available.pop(name, (None, None))
 
 	def set_password( self, name: str, password: str ):
 		with self.password_lock:
-			self.name_list[name] = password
+			self.name_list[name] = {'password': password,
+									'friends': deque()}
 
 	def get_password( self, name: str ):
 		with self.password_lock:
-			return self.name_list.get(name, None)
+			if self.name_list.get(name, None):
+				return self.name_list[name].get('password', None)
+			return None
+
+	def get_friend_list( self, name: str ):
+		with self.password_lock:
+			if self.name_list.get(name, None):
+				return self.name_list[name].get('friends', None)
+			return None

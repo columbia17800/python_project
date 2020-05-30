@@ -147,7 +147,7 @@ class Client(Thread):
 			print('_pick_a_friend binding errors')
 			raise
 
-		p = packet.createGet( str( (name) + p2p.getsockname() ) )
+		p = packet.createGet( str( (name,) + p2p.getsockname() ) )
 		
 		# send packet
 		await asy_send_tcp( self.loop, main, p.getdata() )
@@ -192,3 +192,29 @@ class Client(Thread):
 	async def _manualstop(self):
 		for c in self.availchat:
 			c.stop()
+
+	async def _recv_from(self):
+		raise NotImplementedError
+		while True:
+			retp = await asy_recv_tcp( self.loop, main )
+
+			if rettype == packet.EOT:
+				print("your friend is offline, \
+					pick another available friend")
+				raise pickupError
+				# require operations from UI
+			elif rettype == packet.ACK:
+				conn, _ = await self.loop.sock_accept(p2p)
+
+				for c in self.availchat:
+					if not c.poolsize.locked():
+						return (c, conn)
+
+				chat = Chatter()
+				self.availchat.append(chat)
+				chat.start()
+
+				return (chat, conn)
+			else:
+				# I did not even think of this event
+				raise NotImplementedError

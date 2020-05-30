@@ -24,8 +24,8 @@ class packet():
 
 	def __init__(self, *args):
 		self.type = args[0]
-		self.data = args[2]
-		self.length = args[1]
+		self.data = args[1]
+		self.length = args[2]
 		# no limit on length
 
 	def __copy__(self):
@@ -42,11 +42,11 @@ class packet():
 
 	def __repr__(self):
 		return "{}{}{}{}{}{}".format(self.__class__, self.type,
-			self.seqnum, self.data, self.length, self.version)
+			self.data, self.length)
 
 	@classmethod
 	def createACK(cls, Data: Optional[str] = None) -> packet:
-		return cls(0, Data, 0 if Data is None else len(Data), 1 if ver else 0)
+		return cls(0, Data, 0 if Data is None else len(Data))
 
 	@classmethod
 	def createPacket(cls, Data: str) -> packet:
@@ -84,4 +84,4 @@ class packet():
 		if len(data) > 8:
 			retdata = data[8:].decode("UTF-8")
 
-		return cls(retval[0], retval[1], retdata)
+		return cls(retval[0], retdata, retval[1])

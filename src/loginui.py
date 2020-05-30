@@ -46,7 +46,7 @@ class LogUI():
 				try:
 					self.client.register(user)
 					sg.popup(f"You have registered successfully!")
-				except ct.registrationError e:
+				except ct.registrationError as e:
 					sg.popup(f"Error in register!")
 					print(e.reason)
 

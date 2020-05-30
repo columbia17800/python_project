@@ -28,7 +28,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		if name != "":
 			(request, _) = self.server.get_client(name, (None, None))
 			if request is not None:
-				p = packet.createACK( self.retp.seqnum )
+				p = packet.createACK( )
 				request.sendall(p.getdata())
 			else:
 				pass
@@ -39,20 +39,20 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		name = self.retp.data
 		if name is None:
 			self.running = False
-			p = packet.createEOT( self.retp.seqnum )
+			p = packet.createEOT( )
 			self.request.sendall( p.getdata() )
 			self.server.close_request( self.request )
 			if self.name:
 				self.server.remove_client( self.name )
 		else:
 			(request, _) = self.server.get_client( name )
-			p = packet.createEOT( self.retp.seqnum )
+			p = packet.createEOT( )
 			request.sendall(p.getdata())
 
 	def pack(self):
 		self.msg.append( self.retp.data )
 
-		p = packet.createACK( self.retp.seqnum )
+		p = packet.createACK( )
 
 		self.request.sendall( p.getdata() )
 
@@ -62,9 +62,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		password = self.server.get_password(name)
 		p = None
 		if password is None or password != keyword:
-			p = packet.createEOT( self.retp.seqnum )
+			p = packet.createEOT( )
 		else:
-			p = packet.createACK( self.retp.seqnum )
+			p = packet.createACK( )
 			self.name = name
 			self.server.set_client(name, (self.request, self.client_address))
 		self.request.sendall( p.getdata() )
@@ -75,9 +75,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		(_, addr) = self.server.get_client(name)
 
 		if addr is None:
-			p = packet.createEOT( self.retp.seqnum )
+			p = packet.createEOT( )
 		else:
-			p = packet.createACK( self.retp.seqnum, str(addr) )
+			p = packet.createACK( str(addr) )
 		self.request.sendall( p.getdata() )
 
 	def register(self):
@@ -86,12 +86,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		password = self.server.get_password(name)
 		p = None
 		if password is not None:
-			p = packet.createEOT( self.retp.seqnum, "selected name is registered" )
+			p = packet.createEOT( "selected name is registered" )
 		elif len(data) > 1:
 			self.server.set_password(name, data[1])
-			p = packet.createACK( self.retp.seqnum )
+			p = packet.createACK( )
 		else:
-			p = packet.createEOT( self.retp.seqnum, "write your password in the field" )
+			p = packet.createEOT( "write your password in the field" )
 		self.request.sendall( p.getdata() )
 
 

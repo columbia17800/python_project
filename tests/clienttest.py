@@ -30,8 +30,8 @@ class testclient(unittest.TestCase):
 			self.client.register(('sumbitch', 'sumpassword'))
 
 			self.client.connect_to_server(('sumbitch', 'sumpassword'))
-		except:
-			raise
+		except registrationError as re:
+			print(re.reason)
 
 if __name__ == '__main__':
 	unittest.main()

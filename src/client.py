@@ -51,10 +51,12 @@ class Client(Thread):
 		asyncio.set_event_loop( self.loop )
 		self.runningloop.set()
 		try:
+			recyc = self.loop.create_task( self._recyclebin() )
 			self.loop.run_forever()
 		except:
 			raise
 		finally:
+			recyc.cancel()
 			self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 			self.loop.close()
 
@@ -84,7 +86,13 @@ class Client(Thread):
 		self.loop.call_soon_threadsafe(self.loop.stop)
 
 	def stop(self) -> NoReturn:
+		f = self._manualstop()
+		self._run_coroutine_threadsafe(f)
 		self.pause()
+
+	def recyc(self) -> NoReturn:
+		f = self._manualrecyc()
+		self._run_coroutine_threadsafe(f)
 
 	async def _connect_to_server(self, namepair: Tuple[str, str]) -> NoReturn:
 		# server addr is empty
@@ -169,5 +177,18 @@ class Client(Thread):
 			# I did not even think of this event
 			raise NotImplementedError
 
-	async def _recycle(self, chat):
+	async def _recyclebin(self):
+		while True:
+			await asyncio.sleep(1200)
+			if len(self.availchat[-1].pool) == 0:
+				chat = self.availchat.pop()
+				chat.stop()
 
+	async def _manualrecyc(self):
+		if len(self.availchat[-1].pool) == 0:
+			chat = self.availchat.pop()
+			chat.stop()
+
+	async def _manualstop(self):
+		for c in self.availchat:
+			c.stop()

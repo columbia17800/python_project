@@ -70,13 +70,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		self.request.sendall( p.getdata() )
 
 	def get(self):
-		(name, host, port) = self.retp.data
+		name, _ = self.retp.data
 
 		(conn, _) = self.server.get_client(name)
 
 		if conn is None:
 			p = packet.createEOT( )
 		else:
+			# send connection request to target client if online
+			p = packet.createConnRequest( self.retp.data, self.retp.spec )
+			conn.sendall( p.getdata() )
+
 			p = packet.createACK( str(addr) )
 		self.request.sendall( p.getdata() )
 

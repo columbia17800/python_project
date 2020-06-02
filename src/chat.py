@@ -81,12 +81,9 @@ class Chatter(Thread):
 	async def _recv(self, sock:socket.socket, name: str):
 		while True:
 			rettask = asyncio.create_task( asy_recv_tcp( self.loop, sock) )
-			await rettask
 			
-			try:
-				ret = rettask.result()
-			except asyncio.CancelledError:
-				raise
+			with await rettask as rett:
+				ret = rett.result()
 			rettype = ret.type
 
 			if rettype == packet.ACK:
@@ -107,7 +104,8 @@ class Chatter(Thread):
 	async def _enter_talk_channel(self, sock: socket.socket, name: str) -> NoReturn:
 		self.talk_channel_open = True
 		try:
-			await sem,acquire()
+			await sem.acquire()
+
 			tasks = [
 				asyncio.create_task(self._send_packet( sock, name )),
 				asyncio.create_task(self._recv( sock, name )),
@@ -118,7 +116,9 @@ class Chatter(Thread):
 				self.pool[name] = tasks
 				self.msg[name] = deque()
 				self.recv_msg[name] = deque()
+			# wait for tasks completing
 			await tasks
+
 		except RuntimeError:
 			raise
 		except asyncio.CancelledError:

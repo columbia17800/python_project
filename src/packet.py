@@ -43,7 +43,7 @@ class packet():
 
 	def __repr__(self):
 		return "{}{}{}{}{}{}".format(self.__class__, self.type,
-			self.data, self.length)
+			self.data, self.length, self.spec)
 
 	@classmethod
 	def createACK(cls, Data: Optional[str] = None, Spec: Optional[int] = None) -> packet:

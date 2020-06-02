@@ -52,6 +52,7 @@ class LogUI():
 
 			else:
 				raise NotImplementedError
+		return self.get_client()
 
 	def get_client(self):
 		return self.client

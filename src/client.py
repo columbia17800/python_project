@@ -21,10 +21,43 @@ class registrationError(Exception):
 	pass
 
 class loginError(Exception):
+	def __repr__(self):
+		res = super().__repr__()
+		return f'{res}, error in login'
 	pass
 
 class pickupError(Exception):
+	def __repr__(self):
+		res = super().__repr__()
+		return f'{res}, error in pick_a_friend'
 	pass
+
+class EventSetBefore(Exception):
+	def __repr__(self):
+		res = super().__repr__()
+		return f'{res}, event set before'
+	pass
+
+class EventWithValue(asyncio.Event):
+	def set_with_value(self, value):
+		if not self._value:
+			self._value = True
+
+			for fut in self._waiters:
+				if not fut.done():
+					fut.set_result(value)
+
+	async def wait_for_result(self):
+		if self._value:
+			raise EventSetBefore
+
+		fut = self._loop.create_feature()
+		self._waiters.append(fut)
+		try:
+			await fut 
+			return fut.result()
+		finally:
+			self._waiters.remove(fut)
 '''
 connect_to_server(namepair: Tuple[str, str]):				call to connect to server
 register(namepair: Tuple[str,] or Tuple[str, str]):			register this user into server
@@ -130,30 +163,30 @@ class Client(Thread):
 		else:
 			raise NotImplementedError
 
+	def _create_chat(self):
+		for c in self.availchat:
+			if not c.poolsize.locked():
+				return c
+
+		chat = Chatter()
+		self.availchat.append(chat)
+		chat.start()
+		return chat
+
 	async def _pick_a_friend(self, name: str) -> NoReturn:
 		main = self.main
 
-		p2p = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		p2p.setsockopt(
-			socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		try:
-			p2p.setsockopt(
-				socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-			p2p.bind( socket.gethostname(), 0 )
-			p2p.listen(1)
-		except AttributeError:
-			pass
-		else:
-			print('_pick_a_friend binding errors')
-			raise
+		p2p = socket.create_server( (socket.gethostname(), 0), backlog = 1, reuse_port = True )
 
-		p = packet.createGet( str( (name,) + p2p.getsockname() ) )
+		p = packet.createGet( str( (name,) + p2p.getsockname() ), Spec=160106 )
 		
 		# send packet
 		await asy_send_tcp( self.loop, main, p.getdata() )
 
 		# receive packet
-		retp = await asy_recv_tcp( self.loop, main )
+		self.pickevent = EventWithValue()
+		# won't catch if an error is occured
+		retp = await self.pickevent.wait_for_result()
 		rettype = retp.type
 
 		if rettype == packet.EOT:
@@ -164,13 +197,7 @@ class Client(Thread):
 		elif rettype == packet.ACK:
 			conn, _ = await self.loop.sock_accept(p2p)
 
-			for c in self.availchat:
-				if not c.poolsize.locked():
-					return (c, conn)
-
-			chat = Chatter()
-			self.availchat.append(chat)
-			chat.start()
+			chat = self._create_chat()
 
 			return (chat, conn)
 		else:
@@ -194,27 +221,15 @@ class Client(Thread):
 			c.stop()
 
 	async def _recv_from(self):
-		raise NotImplementedError
 		while True:
 			retp = await asy_recv_tcp( self.loop, main )
+			rettype = retp.type
 
-			if rettype == packet.EOT:
-				print("your friend is offline, \
-					pick another available friend")
-				raise pickupError
-				# require operations from UI
-			elif rettype == packet.ACK:
-				conn, _ = await self.loop.sock_accept(p2p)
-
-				for c in self.availchat:
-					if not c.poolsize.locked():
-						return (c, conn)
-
-				chat = Chatter()
-				self.availchat.append(chat)
-				chat.start()
-
-				return (chat, conn)
+			if retp.spec is 160106:
+				if rettype is not packet.CONN:
+					self.pickevent.set_result(retp)
+				else:
+					# pop a UI and ask if accept the Call
+					raise NotImplementedError
 			else:
-				# I did not even think of this event
 				raise NotImplementedError

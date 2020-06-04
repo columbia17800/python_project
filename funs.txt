@@ -1,0 +1,196 @@
+6.2:
+	
+	~ kotlin don't have implicit cast in assigning for standard types
+
+	~ arithmetic operators can mix types
+
+	~ kotlin has type inference
+
+	~ string templates by $
+
+	~ three double-quotes multiline-strings with | 'pipe' and .trimMargin(), it can ignore the leading spaces
+
+	~ Pair(2, 3) equals to 2 to 3
+
+	~ tuple functions like tuple in python
+
+	~ short 2 bytes,
+	  int 4 bytes,
+	  long 8 bytes,
+	  float 1 bytes precision 6,
+	  double 2 bytes precision 15
+
+	~ Any type is abstract type of all
+
+	~ if a function does not explicit return anything, it returns 'Unit'
+
+	~ Nothing not only doesn't return but also never completes
+	  nothing can be completed by throwing exceptions
+	
+	~ comparison operators: ==, !=, !, >, <, >=, <=
+
+	  and &&
+
+	  or ||
+
+	  string logic: comparison is based on alphabet
+
+	~ if statement is c-like
+
+	~ while and do while is same as java
+
+	~ .. equals to range(), until excludes the end, downTo is decresing range, step indicates the increased value between nums
+
+	~ repeat loop runs for certain times,
+
+	  add label .*@ and continue can choose which loop is about to skip
+
+	  when expr is like switch statement
+
+	  when/if can be at right hand which means they return values
+
+	  in operator is python-like
+
+	~ one line return can be indicated by = operator
+
+	~ parameters are immutable
+
+	~ overloading: different number of parameters or different types
+	  it is c-like
+
+	~ :: method reference operator 
+
+	~ nullable variable by appending ? to type
+
+	~ !! not-null assertion operator
+
+	~ smart cast for nullable value under null-checking
+
+	~ ?. safe call for nullable variable otherwise it throws
+	  if a value is null, then evaluation of expression is stopped and returns null
+	
+	~ inside let smart casts can be used
+
+	~ Elvis operator ?: access the value in box or return the default value
+
+	~ float type number must follow 'f'/'F'
+
+	Done with Section 1
+
+	~ array is fixed size, list is dynamically allocated
+
+	  creating array uses 'arrayOf',
+	  creating immutable list uses 'listOf',
+	  creating mutable list uses 'mutableListOf'
+	
+	~ list has isEmpty(), last(), first() function,
+	  
+	  min() return null if no minimum can be determinated
+	  so smart cast should be applied on the return value of the method
+	  Similar to max()
+
+	  indexing is the same as get(), out of bound will raise errors
+
+	  using slice( range '..' ) to slice list
+
+	  contains() equals to in operator
+
+	~ add() is the same as +=
+
+	  since += returns new array, although array is fixed-size, it could still be used
+
+	  add(index, value) to insert in a certain position,
+	  remove(value): Bool or removeAt(index): Anyvalue to remove in array
+
+	  indexOf() has the same behaviour as java
+
+	  list into array: lst.joinToString()
+
+	  indexing syntax = .set()
+
+	  withIndex() returns (index, value) pairs
+
+	  indices return index in array
+
+	  nullable list itself can be null, but its element can not
+
+	  however, you can create a list of nullable objects
+
+	~ map indexing returns null if item is not found
+
+	  put(pair) to increase map equals indexing
+	  += is also an option
+
+	  remove with one arg will delete anyway,
+	  remove with two args will delete pair only when both matched
+
+	  iteration behaviour is like python
+
+	  in kotlin, Any basic type has already hashed
+	  kotlin has great built-in hashing which grants:
+	  O(1) access, O(1) insertion, O(1) delete
+
+	  for performance-critical code, hashmapOf is used instead of mapOf
+
+	  spread array by asterisk * like python
+
+	~ set is similar to python's set
+
+	  set has almost the identical functionality as map has
+
+	~ lambda can be assigned without :: operator
+
+	~ minus sign in sorting indicates descending order
+
+	~ when lambda only has one parameter, we can use it to reference the parameter
+
+	~ .forEach{}, filter{}, map{}, mapNotNull{}, fold () 'start element' {}, reduce{} 'first 
+	  element in collection is the start element'
+
+	Done with Section 2
+
+	~ === compares with the address of reference
+
+	~ operator of refering a member of class is ::
+
+	~ it has default data class to only store data
+	  by using 'data class'
+
+	~ destructing declaration is like python's tuple destruction. e.g.
+	  val ( a, b, c ) = tuple
+
+	~ kotlin have singletons, which have only an instance throughout application
+	  like 'object' type itself is an instance so that it has no constructor
+
+	~ static member is 'companion object'
+
+	~ companion object has implicit name 'Companion' when a name isn't given
+
+	~ create anonymous modified object for a class/inference
+	  'val c = object : Counts {}'
+
+	~ in kotlin, there is no field by default,
+	  constructor is the parenthesis after class name
+
+	~ delegates object:
+	    by Delegates.observable(.) { object, old, new -> }
+	      return Unit, do user-defined behaviour based on old/new value
+
+	    by Delegates.vetoable(.) { object, old, new -> }
+	      return boolean, if false, revert to the old value
+
+		by lazy {}
+		  assign the value in lambda only at first access
+
+	~ lateinit:
+		can be initialized later instead of in the constructor,
+		can reduce the wrapper, 'nullable'
+
+	~ extension property:
+	    add properties to a class outside of the class definition
+
+	
+
+
+
+

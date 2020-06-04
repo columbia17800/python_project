@@ -11,9 +11,17 @@ QT_ENTER_KEy2 = 'special 16777221'
 
 class SettingUI():
 	def __init__(self, setting: UISetting, namelist, id):
-		layout = [[sg.Text("Background color"), sg.]
+		self.setting = setting
+		layout = [[sg.Text("Background color"), sg.OptionMenu(values = ('Green', 'Blue'), size = (20, 1))]
+				[sg.Text("Font size"), sg.OptionMenu(values = ('Small', 'Middle', 'Large'), size = (20, 1))]
+				[sg.Text("Font color"), sg.OptionMenu(values = ('Black', 'Brown'), size = (20, 1))]
+				[sg.Text("Font type"), sg.OptionMenu(values = ('Helvetica', 'Calibri'), size = (20, 1))]
+				[sg.Button('Save', button_color=('white', 'black'), key='-Save-'),
+           		sg.Button('Cancel', button_color=('white', 'black'), key='-Cancel-'),
+           		sg.Button('Reset', button_color=('white', 'firebrick3'), key='-Reset-'),
+           		sg.Button('Exit', button_color=('white', 'springgreen4'), key='-Exit-')]
 			]
-		window = sg.Window("Time Tracker", layout,
+		self.window = sg.Window("Settings", layout,
 			default_element_size=(12, 1),
           	text_justification='r',
           	auto_size_text=False,
@@ -21,16 +29,18 @@ class SettingUI():
           	default_button_element_size=(12, 1),
           	finalize=True)
 
+	def getSetting(self) -> UISetting:
+		return self.setting
+
 	def event_loop(self) -> str:
 		while True:
 			event, values = self.window.read()
-			key = pygame
+			if event == sg.WIN_CLOSED:
+        		break
 			if event in (None, 'Exit'):
 				break
-			if values['-INPUT-'] != '':
-				wanted = values['-INPUT-']
-				targets = [x for x in namelist if search in x]
-				self.window['-LIST-'].update(targets)
+			if event == 'Save':
+				
 			else:
 				self.window['-LIST-'].update(self.namelist)
 			if event == 'Chat!' or event == :

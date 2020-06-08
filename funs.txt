@@ -1,5 +1,7 @@
 6.2:
-	
+	~ kotlin compiles from java, so kotlin has most of java's features
+		i.e. garbage collector
+
 	~ kotlin don't have implicit cast in assigning for standard types
 
 	~ arithmetic operators can mix types
@@ -166,7 +168,7 @@
 
 	~ companion object has implicit name 'Companion' when a name isn't given
 
-	~ create anonymous modified object for a class/inference
+	~ create anonymous modified object for a class/interface
 	  'val c = object : Counts {}'
 
 	~ in kotlin, there is no field by default,
@@ -189,8 +191,58 @@
 	~ extension property:
 	    add properties to a class outside of the class definition
 
-	
+6.4
+	~ implement value getter/setter as a method (i.e. SetUp()) when it is required
+	  extensive computation or reading from a database
 
+	~ it has this pointer like java
 
+	~ companion object methods equal to static member methods
 
+	~ add extension methods by . annotation
 
+	~ open keyword is explicitly needed when using inheritance
+
+	~ kotlin class can only inherit from one other class
+
+	~ as infix operator provides cast to specific type
+	  as? will return null if the cast fails
+
+	~ strong static dispatch in kotlin: select operation at compile time
+
+	~ sealed class contains a number of class type like a package of classes
+
+	~ secondary constructors can use this() to call primary constructor
+
+	~ define inner modifier if inner class want to access outter property
+
+	~ new visibility modifier: internal--visible only within same module
+
+	~ enum class acts like rust's enum class but with order built-in
+
+	~ enum vs. sealed:
+		sealed class can have abstract members,
+		sealed class can have multiple instances of a subclass
+		can not create direct subclsses of a sealed class outisde the file it declared
+		constructors of sealed classes are always private
+
+	~ interfaces support multiple conformance, a class can inherit from multiple interfaces
+
+	~ add <T> directly after fun, it let compiler know it is a generic parameter
+
+	~ T : 'type', will only accept types conform to 'type'
+
+	~ T is not any type
+
+	~ star projection (e.g. Container<*>) will result Any? type for its items
+
+	~ reified type retain type info
+
+	~ variance:
+		covariant/in: generic type will only ever be used in parameters or other 
+			things being handed into your type / into subtype
+
+		contravariant/out: generic type will only ever be used in return values or 
+			other things being coming out of your type  / into supertype
+
+		invariant: must be the same type T

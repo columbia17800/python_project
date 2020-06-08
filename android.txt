@@ -1,0 +1,76 @@
+	~ overrides onCreate to create the activity 'AppCompatActivity'
+
+	~ overrides onSaveInstanceState(outState: Bundle)
+		saved all super states and use put to save data into bundle dictonary
+
+	~ overrides onDestroy to destroy activity
+
+	~ recreates the activity when a new orientation is applied by 
+	calling onCreate() again
+
+	~ use 'get' to retrieve the data in onCreate if savedState is not null
+
+	~ color definition goes to colors.xml
+	~ string definitions go to strings.xml
+	~ text/string/widget/layout/theme styles go to styles.xml
+
+	~ android:fillAfter means the animation won't reset to the View to its original position once it's complete
+
+	~ android:interpolator sets the interpolator used for the animation
+
+	~ scale attribute for scaling animation to resize View.
+		android:duration : duration unit is millisecs
+		android:from(X/Y)Scale : set the inital width/height of View as ..
+		android: pivot(X/Y) : specify the center pointer, expressed in percentages
+		android:to(X/Y)scale : set the final width/height of View as ..
+
+	~ overrides the activity callback when it attempts to create the menu
+		use Activity's menuinflator to set up menu layout
+
+	  declare items for the options menu from either activity subclass or fragments subclass. If both, they would combine in the UI. activity appears first, followed by those of fragment in the order in which each fragment is added
+
+	~ onCreate -> onStart -> onRestoreInstanceState
+
+
+	  onSaveInsatanceState -> onPause -> onStop -> onRestart -> onStart -> onRestoreInstance
+	  	 						 |			|
+							  onResume		|
+	  			 						onDestroy
+
+	~ RecyclerView:
+		Adapter: holds an array of items, either return existing one or new one
+				 binds the ViewHolder to a data item at given position
+		ViewHolders: holds the data item for display in RecyclerView
+
+		it can use linear/grid/stagger layout manager
+
+	~ sharedPreferences
+		~ get a reference to app's default SharedPreference via 'PreferenceManager.getDefaultSharedPreferences(context)'
+		~ append .edit() to get a SharedPreferences.Editor
+		  so that we could write key pair into shared preferences
+		~ append .all to get the contents of shared preferences in context
+
+	~ Intents
+		~ an object that encapsulates some work or action that app will preform at some point in the future
+
+	~ onAttach
+		it is run when the Fragment is first associated with an Activity,
+		which gives the chance to set up anything with activity/context before
+		Fragment is created
+
+	~ onActivityCreated
+		it is run when when the Activity to which Fragment is attached has
+		finished onCreate
+
+	~ supportFragmentManager
+		supports dynamically adding and removing Fragments at runtime
+
+		transactions are what do with Fragments
+
+		append .add to add Fragments
+		append .commit to inform and make it visible in Activity
+		append .remove to remove Fragments
+
+		append .addToBackStack to add fragments into back stack instead of
+		attaching directly
+		append .replace = remove + add

@@ -26,6 +26,7 @@ class ListUI():
 		while True:
 			event, values = self.window.read()
 			key = pygame
+			// 多加一个if，当好友发来聊天请求时call check_connect，返回true则开始聊天。
 			if event in (None, 'Exit'):
 				break
 			if values['-INPUT-'] != '':
@@ -45,6 +46,21 @@ class ListUI():
 				return that
 			if event == 'Setting':
 				print('Setting!')
+
+	def check_connect(self, friend) -> bool:
+		asking = friend + ' is asking to chat with you!'
+		lay = [[sg.Text(asking)]
+			[sg.Button('Accept'), sg.Button('Reject')]]
+
+		win = window('Chat request', lay)
+
+		while True:
+			event, values = win.read()
+			if event in (None, 'Reject'):
+				return False
+			if event == 'Accept':
+				return True
+		win.close()
 
 	def pop_chat(self, friend: str):
 		chat = self.client.pick_a_friend(friend)

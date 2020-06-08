@@ -38,20 +38,41 @@ class SettingUI():
 			if event == sg.WIN_CLOSED:
         		break
 			if event in (None, 'Exit'):
+				bo = check_exit()
+				if bo:
+					break
+			if event == '-Save-':
+				self.update_setting(values)
+			if event == '-Cancel-' :
 				break
-			if event == 'Save':
-				
-			else:
-				self.window['-LIST-'].update(self.namelist)
-			if event == 'Chat!' or event == :
-				that = values['-LIST-'][0]
-				print("Start chating with", that + '!')
-				# Start chating here
-				return that
-			if event in ('\r', QT_ENTER_KEY1, QT_ENTER_KEY2):
-				that = values['-LIST-'][0]
-				print("Start chating with", that + '!')
-				return that
+			if event == '-Reset-':
+				self.reset_setting()
+				break
+
+	def update_setting(self, values):
+		self.setting.themecolor = values[0]
+		self.window_font_size = values[1]
+		self.window_font_color = values[2]
+		self.window_font = value[3]
+
+	def reset_setting(self):
+		self.setting.themecolor = 'GreenTan'
+		self.window_font_size = '12'
+		self.window_font_color = 'Black'
+		self.window_font = 'Helvetica'
+
+	def check_exit():
+		lay = [[sg.Text('Do you want to exit? Your setting would not be saved!')]
+				[sg.Button('Exit'), sg.Button('Back')]]
+		win = sg.Window('Exit', lay)
+
+		while True:
+			event, values = win.read():
+			if event == 'Exit':
+				return True
+			if event in (None, 'Back'):
+				return False
+		win.close()
 
 	def __del__(self):
 		self.window.close()

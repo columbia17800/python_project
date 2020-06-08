@@ -1,2 +1,3 @@
 test*.*/testmain.py
 a.out
+*.txt

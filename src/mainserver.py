@@ -117,6 +117,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 			3 : self.connrequest,
 			4 : self.get,
 			5 : self.register,
+			6 : self.friend_add,
 		}
 		while self.running:
 			try:
@@ -175,5 +176,13 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 				if self.name_list.get(friendname, None):
 					self.name_list[selfname].get('friends').append(friendname)
 					self.name_list[friendname].get('friends').append(selfname)
+					return True
+		return False
+
+	def remove_friend( self, selfname: str, friendname: str ) -> bool:
+		with self.password_lock:
+			if self.name_list.get(selfname, None):
+				if self.name_list(friendname, None):
+					self.name_list[selfname].get('friends').remove(friendname)
 					return True
 		return False

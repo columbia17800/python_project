@@ -98,6 +98,16 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 			p = packet.createEOT( "write your password in the field" )
 		self.request.sendall( p.getdata() )
 
+	def friend_add(self):
+		data = literal_eval(self.retp.data)
+		selfname = data[0]
+		friendname = data[1]
+		ret = self.server.add_friend(selfname, friendname)
+		if ret:
+			p = packet.createACK()
+		else:
+			p = packet.createEOT( "you or friend does not exist in server" )
+		self.request.sendall( p.getdata() )
 
 	def handle(self):
 		switcher = {
@@ -151,10 +161,19 @@ class MainServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 		with self.password_lock:
 			if self.name_list.get(name, None):
 				return self.name_list[name].get('password', None)
-			return None
+		return None
 
 	def get_friend_list( self, name: str ):
 		with self.password_lock:
 			if self.name_list.get(name, None):
 				return self.name_list[name].get('friends', None)
-			return None
+		return None
+
+	def add_friend( self, selfname: str, friendname: str ) -> bool:
+		with self.password_lock:
+			if self.name_list.get(selfname, None):
+				if self.name_list.get(friendname, None):
+					self.name_list[selfname].get('friends').append(friendname)
+					self.name_list[friendname].get('friends').append(selfname)
+					return True
+		return False
